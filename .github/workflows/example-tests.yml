@@ -21,7 +21,9 @@ jobs:
         run: npm i
       - name: Install browsers
         working-directory: examples/${{ matrix.example }}
-        run: npx playwright install
+        run: |
+          npx playwright install --with-deps
+          npx playwright install-deps webkit || true
       - name: Run tests (Linux headless)
         working-directory: examples/${{ matrix.example }}
         run: |
