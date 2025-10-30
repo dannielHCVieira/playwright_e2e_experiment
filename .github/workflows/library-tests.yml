@@ -12,13 +12,13 @@ jobs:
       matrix:
         include:
           - name: chromium
-            cmd: npm run ctest -- --reporter=list,html,./tests/bidi/csvReporter
+            cmd: npm run ctest -- --reporter=list,html,./tests/reporters/csvReporter.cjs
           - name: firefox
-            cmd: npm run ftest -- --reporter=list,html,./tests/bidi/csvReporter
+            cmd: npm run ftest -- --reporter=list,html,./tests/reporters/csvReporter.cjs
           - name: webkit
-            cmd: npm run wtest -- --reporter=list,html,./tests/bidi/csvReporter
+            cmd: npm run wtest -- --reporter=list,html,./tests/reporters/csvReporter.cjs
           - name: electron
-            cmd: npm run etest -- --reporter=line,html,./tests/bidi/csvReporter
+            cmd: npm run etest -- --reporter=line,html,./tests/reporters/csvReporter.cjs
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -63,7 +63,7 @@ jobs:
         with:
           name: library-${{ matrix.name }}-csv
           path: |
-            tests/library/test-results.csv
+            test-results.csv
           if-no-files-found: ignore
       - name: Summarize results
         if: always()
@@ -100,7 +100,7 @@ jobs:
       - name: Install browsers
         run: npx playwright install
       - name: Run tests
-        run: npm run webview2test -- --reporter=line,html,./tests/bidi/csvReporter
+        run: npm run webview2test -- --reporter=line,html,./tests/reporters/csvReporter.cjs
         shell: bash
       - name: Upload HTML report
         if: always()
@@ -125,7 +125,7 @@ jobs:
         with:
           name: library-webview2-csv
           path: |
-            tests/webview2/test-results.csv
+            test-results.csv
           if-no-files-found: ignore
       - name: Summarize results
         if: always()
