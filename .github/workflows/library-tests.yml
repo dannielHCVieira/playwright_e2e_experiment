@@ -77,7 +77,7 @@ jobs:
             let total=0,passed=0,failed=0,skipped=0;
             const walk=s=>{ if(!s) return; if(s.suites) s.suites.forEach(walk); if(s.specs){ for(const spec of s.specs){ for(const t of spec.tests){ total++; if(t.status==='skipped') skipped++; else if(t.status===t.expectedStatus) passed++; else failed++; } } } };
             walk(j);
-            const out=`# Results (library: ${{ matrix.name }})\nTotal: ${total}\nPassed: ${passed}\nFailed: ${failed}\nSkipped: ${skipped}`;
+            const out='# Results (library: ${{ matrix.name }})\nTotal: '+total+'\nPassed: '+passed+'\nFailed: '+failed+'\nSkipped: '+skipped;
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out);
           } else {
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'No JSON report found');
@@ -139,7 +139,7 @@ jobs:
             let total=0,passed=0,failed=0,skipped=0;
             const walk=s=>{ if(!s) return; if(s.suites) s.suites.forEach(walk); if(s.specs){ for(const spec of s.specs){ for(const t of spec.tests){ total++; if(t.status==='skipped') skipped++; else if(t.status===t.expectedStatus) passed++; else failed++; } } } };
             walk(j);
-            const out=`# Results (library: webview2)\nTotal: ${total}\nPassed: ${passed}\nFailed: ${failed}\nSkipped: ${skipped}`;
+            const out='# Results (library: webview2)\nTotal: '+total+'\nPassed: '+passed+'\nFailed: '+failed+'\nSkipped: '+skipped;
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out);
           } else {
             fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'No JSON report found');
