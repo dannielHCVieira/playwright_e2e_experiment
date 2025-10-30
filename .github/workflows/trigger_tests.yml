@@ -1,10 +1,7 @@
-name: "Internal Tests"
+name: "Internal Tests (disabled)"
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
+  workflow_dispatch:
 
 jobs:
   trigger:

@@ -1,9 +1,6 @@
-name: "PR: bump stable-test-runner"
+name: "PR: bump stable-test-runner (disabled)"
 on:
   workflow_dispatch:
-  schedule:
-    # At 10:00am UTC  (3AM PST) every Monday
-    - cron: "0 10 * * 1"
 jobs:
   trigger-roll:
     name: Trigger Roll

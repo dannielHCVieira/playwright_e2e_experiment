@@ -1,14 +1,7 @@
-name: "publish release - npm, driver, trace viewer"
+name: "publish release - npm, driver, trace viewer (disabled)"
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "10 5 * * *"
-  push:
-    branches:
-      - release-*
-  release:
-    types: [published]
 
 env:
   ELECTRON_SKIP_BINARY_DOWNLOAD: 1

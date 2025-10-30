@@ -1,19 +1,7 @@
-name: "components"
+name: "components (disabled)"
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
-  pull_request:
-    paths-ignore:
-      - 'browser_patches/**'
-      - 'docs/**'
-      - 'packages/playwright/src/mcp/**'
-      - 'tests/mcp/**'
-    branches:
-      - main
-      - release-*
+  workflow_dispatch:
 
 env:
   FORCE_COLOR: 1

@@ -1,10 +1,7 @@
-name: "tests Video"
+name: "tests Video (disabled)"
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
+  workflow_dispatch:
 
 env:
   # Force terminal colors. @see https://www.npmjs.com/package/colors

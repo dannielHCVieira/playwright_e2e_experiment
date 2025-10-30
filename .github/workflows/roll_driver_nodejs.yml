@@ -1,9 +1,6 @@
-name: "PR: bump driver Node.js"
+name: "PR: bump driver Node.js (disabled)"
 on:
   workflow_dispatch:
-  schedule:
-    # At 10:00am UTC  (3AM PST) every tuesday and thursday to roll to new Node.js driver
-    - cron: "0 10 * * 2,4"
 jobs:
   trigger-nodejs-roll:
     name: Trigger Roll

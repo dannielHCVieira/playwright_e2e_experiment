@@ -1,14 +1,6 @@
-name: "Check client side changes"
+name: "Check client side changes (disabled)"
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'docs/src/api/**/*'
-      - 'packages/playwright-core/src/client/**/*'
-      - 'packages/playwright-core/src/utils/isomorphic/**/*'
-      - 'packages/playwright/src/matchers/matchers.ts'
-      - 'packages/protocol/src/protocol.yml'
+  workflow_dispatch:
 jobs:
   check:
     name: Check

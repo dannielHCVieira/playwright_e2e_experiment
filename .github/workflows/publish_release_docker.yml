@@ -1,9 +1,7 @@
-name: "publish release - Docker"
+name: "publish release - Docker (disabled)"
 
 on:
   workflow_dispatch:
-  release:
-    types: [published]
 
 env:
   ELECTRON_SKIP_BINARY_DOWNLOAD: 1

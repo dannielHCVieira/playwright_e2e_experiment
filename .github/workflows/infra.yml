@@ -1,14 +1,7 @@
-name: "infra"
+name: "infra (disabled)"
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
-  pull_request:
-    branches:
-      - main
-      - release-*
+  workflow_dispatch:
 
 env:
   ELECTRON_SKIP_BINARY_DOWNLOAD: 1

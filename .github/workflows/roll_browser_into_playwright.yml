@@ -1,8 +1,7 @@
-name: Roll Browser into Playwright
+name: Roll Browser into Playwright (disabled)
 
 on:
-  repository_dispatch:
-    types: [roll_into_pw]
+  workflow_dispatch:
 
 env:
   ELECTRON_SKIP_BINARY_DOWNLOAD: 1

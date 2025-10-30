@@ -1,9 +1,6 @@
-name: Publish Test Results
+name: Publish Test Results (disabled)
 on:
-  workflow_run:
-    workflows: ["tests 1", "tests 2", "tests others", "MCP"]
-    types:
-      - completed
+  workflow_dispatch:
 jobs:
   merge-reports:
     permissions:

@@ -1,18 +1,7 @@
-name: "tests 2"
+name: "tests 2 (disabled)"
 
 on:
-  push:
-    branches:
-      - main
-      - release-*
-  pull_request:
-    paths-ignore:
-      - 'browser_patches/**'
-      - 'docs/**'
-    types: [ labeled ]
-    branches:
-      - main
-      - release-*
+  workflow_dispatch:
 
 env:
   # Force terminal colors. @see https://www.npmjs.com/package/colors
