@@ -26,9 +26,9 @@ jobs:
         working-directory: examples/${{ matrix.example }}
         run: |
           if [[ "$(uname)" == "Linux" ]]; then
-            xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test --reporter=line,json=./test-results/report.json,html,../../tests/bidi/csvReporter
+            xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test --reporter=line,html,../../tests/bidi/csvReporter
           else
-            npx playwright test --reporter=line,json=./test-results/report.json,html,../../tests/bidi/csvReporter
+            npx playwright test --reporter=line,html,../../tests/bidi/csvReporter
           fi
         shell: bash
       - name: Upload HTML report
