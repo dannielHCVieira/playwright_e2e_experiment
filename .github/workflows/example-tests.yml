@@ -1,0 +1,79 @@
+name: Example Tests (minimal)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  examples:
+    name: ${{ matrix.example }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        example: [todomvc, svgomg, mock-battery, mock-filesystem]
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install deps
+        working-directory: examples/${{ matrix.example }}
+        run: npm i
+      - name: Install browsers
+        working-directory: examples/${{ matrix.example }}
+        run: npx playwright install
+      - name: Run tests (Linux headless)
+        working-directory: examples/${{ matrix.example }}
+        run: |
+          if [[ "$(uname)" == "Linux" ]]; then
+            xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- npx playwright test --reporter=line,json=./test-results/report.json,html,../../tests/bidi/csvReporter
+          else
+            npx playwright test --reporter=line,json=./test-results/report.json,html,../../tests/bidi/csvReporter
+          fi
+        shell: bash
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example }}-html
+          path: |
+            examples/${{ matrix.example }}/playwright-report/**
+          if-no-files-found: ignore
+      - name: Upload JSON report(s)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example }}-json
+          path: |
+            examples/${{ matrix.example }}/test-results/report.json
+            examples/${{ matrix.example }}/test-results.json
+          if-no-files-found: ignore
+      - name: Upload CSV summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-${{ matrix.example }}-csv
+          path: |
+            examples/${{ matrix.example }}/test-results.csv
+          if-no-files-found: ignore
+      - name: Summarize results
+        if: always()
+        working-directory: examples/${{ matrix.example }}
+        run: |
+          node -e "
+          const fs=require('fs');
+          let p='test-results/report.json';
+          if(!fs.existsSync(p)) p='test-results.json';
+          if(fs.existsSync(p)){
+            const j=JSON.parse(fs.readFileSync(p,'utf8'));
+            let total=0,passed=0,failed=0,skipped=0;
+            const walk=s=>{ if(!s) return; if(s.suites) s.suites.forEach(walk); if(s.specs){ for(const spec of s.specs){ for(const t of spec.tests){ total++; if(t.status==='skipped') skipped++; else if(t.status===t.expectedStatus) passed++; else failed++; } } } };
+            walk(j);
+            const out=`# Results (example: ${{ matrix.example }})\nTotal: ${total}\nPassed: ${passed}\nFailed: ${failed}\nSkipped: ${skipped}`;
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out);
+          } else {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'No JSON report found');
+          }
+          "
+
+

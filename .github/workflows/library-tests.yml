@@ -1,0 +1,149 @@
+name: Library Tests (minimal)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  desktop:
+    name: Desktop (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: chromium
+            cmd: npm run ctest -- --reporter=list,json=./test-results/report.json,html,./tests/bidi/csvReporter
+          - name: firefox
+            cmd: npm run ftest -- --reporter=list,json=./test-results/report.json,html,./tests/bidi/csvReporter
+          - name: webkit
+            cmd: npm run wtest -- --reporter=list,json=./test-results/report.json,html,./tests/bidi/csvReporter
+          - name: electron
+            cmd: npm run etest -- --reporter=line,json=./test-results/report.json,html,./tests/bidi/csvReporter
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: 1
+      - name: Build
+        run: npm run build
+      - name: Install browsers
+        run: npx playwright install --with-deps
+      - name: Run tests (Linux headless)
+        run: |
+          if [[ "$(uname)" == "Linux" ]]; then
+            xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" -- ${{ matrix.cmd }}
+          else
+            ${{ matrix.cmd }}
+          fi
+        shell: bash
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-${{ matrix.name }}-html
+          path: |
+            playwright-report/**
+          if-no-files-found: ignore
+      - name: Upload JSON report(s)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-${{ matrix.name }}-json
+          path: |
+            test-results/report.json
+            test-results.json
+          if-no-files-found: ignore
+      - name: Upload CSV summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-${{ matrix.name }}-csv
+          path: |
+            tests/test-results.csv
+          if-no-files-found: ignore
+      - name: Summarize results
+        if: always()
+        run: |
+          node -e "
+          const fs=require('fs');
+          let p='test-results/report.json';
+          if(!fs.existsSync(p)) p='test-results.json';
+          if(fs.existsSync(p)){
+            const j=JSON.parse(fs.readFileSync(p,'utf8'));
+            let total=0,passed=0,failed=0,skipped=0;
+            const walk=s=>{ if(!s) return; if(s.suites) s.suites.forEach(walk); if(s.specs){ for(const spec of s.specs){ for(const t of spec.tests){ total++; if(t.status==='skipped') skipped++; else if(t.status===t.expectedStatus) passed++; else failed++; } } } };
+            walk(j);
+            const out=`# Results (library: ${{ matrix.name }})\nTotal: ${total}\nPassed: ${passed}\nFailed: ${failed}\nSkipped: ${skipped}`;
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out);
+          } else {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'No JSON report found');
+          }
+          "
+
+
+  webview2:
+    name: WebView2 (windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Install browsers
+        run: npx playwright install
+      - name: Run tests
+        run: npm run webview2test -- --reporter=line,json=./test-results/report.json,html,./tests/bidi/csvReporter
+        shell: bash
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-webview2-html
+          path: |
+            playwright-report/**
+          if-no-files-found: ignore
+      - name: Upload JSON report(s)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-webview2-json
+          path: |
+            test-results/report.json
+            test-results.json
+          if-no-files-found: ignore
+      - name: Upload CSV summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: library-webview2-csv
+          path: |
+            tests/test-results.csv
+          if-no-files-found: ignore
+      - name: Summarize results
+        if: always()
+        run: |
+          node -e "
+          const fs=require('fs');
+          let p='test-results/report.json';
+          if(!fs.existsSync(p)) p='test-results.json';
+          if(fs.existsSync(p)){
+            const j=JSON.parse(fs.readFileSync(p,'utf8'));
+            let total=0,passed=0,failed=0,skipped=0;
+            const walk=s=>{ if(!s) return; if(s.suites) s.suites.forEach(walk); if(s.specs){ for(const spec of s.specs){ for(const t of spec.tests){ total++; if(t.status==='skipped') skipped++; else if(t.status===t.expectedStatus) passed++; else failed++; } } } };
+            walk(j);
+            const out=`# Results (library: webview2)\nTotal: ${total}\nPassed: ${passed}\nFailed: ${failed}\nSkipped: ${skipped}`;
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,out);
+          } else {
+            fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'No JSON report found');
+          }
+          "
+
+
