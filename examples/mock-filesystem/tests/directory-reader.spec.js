@@ -56,7 +56,7 @@ test('should display directory tree', async ({ page }) => {
   await page.goto('/ls-dir.html');
   await page.locator('button', { hasText: 'Open directory' }).click();
   // Check that the displayed entries match mock directory.
-  await expect(page.locator('#dir')).toContainText([
+  await expect(page.locator('#dir div')).toHaveText([
     'file1',
     'dir1', 'file2', 'file3',
     'dir2', 'file4', 'file5'
