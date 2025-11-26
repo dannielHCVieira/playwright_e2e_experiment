@@ -139,7 +139,6 @@ jobs:
             --suite @example/${{ matrix.project }} \
             --logs-dir artifacts \
             --output-json reports \
-            --ignore-https-errors \
             --rate-limit-batch ${{ github.event.inputs.rate_limit_batch || '50' }} \
             --rate-limit-sleep ${{ github.event.inputs.rate_limit_sleep || '10' }}
 
@@ -221,6 +220,7 @@ jobs:
             --suite @example/${{ matrix.project }} \
             --logs-dir artifacts \
             --output-json reports \
+            --ignore-https-errors \
             --rate-limit-batch ${{ github.event.inputs.rate_limit_batch || '50' }} \
             --rate-limit-sleep ${{ github.event.inputs.rate_limit_sleep || '10' }}
 
