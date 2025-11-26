@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import os
 import sys
 import time
 from datetime import datetime, timezone
@@ -80,6 +81,15 @@ def parse_args() -> argparse.Namespace:
         metavar="SECONDS",
         help="Segundos de pausa após cada batch (usado com --rate-limit-batch).",
     )
+    parser.add_argument(
+        "--ignore-https-errors",
+        action="store_true",
+        default=_env_flag("NOVA_ACT_IGNORE_HTTPS_ERRORS"),
+        help=(
+            "Ignora validações de certificado HTTPS. Útil para servidores locais em http://."
+            " Também pode ser habilitado definindo NOVA_ACT_IGNORE_HTTPS_ERRORS=1."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -119,6 +129,7 @@ def main() -> int:
         suite_label=suite_label,
         run_id=run_id,
         headless=not args.headful,
+        ignore_https_errors=args.ignore_https_errors,
         logger=logging.getLogger("nova_act_runner"),
     )
 
@@ -261,3 +272,11 @@ def _slugify_filename(value: str) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
+
+
+def _env_flag(env_var: str, default: bool = False) -> bool:
+    """Retorna True quando env estiver definido com valor truthy."""
+    value = os.getenv(env_var)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}

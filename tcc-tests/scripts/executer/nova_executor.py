@@ -94,11 +94,13 @@ class NovaActExecutor:
         run_id: str,
         headless: bool = True,
         record_video: bool = True,
+        ignore_https_errors: bool = False,
         logger: Optional[logging.Logger] = None,
     ) -> None:
         self.logger = logger or LOGGER
         self.headless = headless
         self.record_video = record_video
+        self.ignore_https_errors = ignore_https_errors
         self.run_root = artifacts_root / suite_label / run_id
         self.run_root.mkdir(parents=True, exist_ok=True)
 
@@ -135,6 +137,7 @@ class NovaActExecutor:
                 starting_page=test_case.config.url,
                 logs_directory=str(test_dir),
                 record_video=self.record_video,
+                ignore_https_errors=self.ignore_https_errors,
             ) as nova:
                 # -------------------------------------------------------------
                 # FASE 1: Executa ações (com tratamento especial para double-click)

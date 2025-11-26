@@ -17,6 +17,7 @@ Principais opções:
 - `--dry-run`: apenas lista os testes encontrados.
 - `--logs-dir`: muda o diretório raiz de artefatos (default `tcc-tests/artifacts`).
 - `--output-json`: exporta um relatório consolidado em JSON.
+- `--ignore-https-errors`: ignora validações de certificado HTTPS (útil para servidores locais em `http://`). Também pode ser habilitado com `NOVA_ACT_IGNORE_HTTPS_ERRORS=1`.
 
 Toda execução cria a estrutura `tcc-tests/artifacts/<suite>/<YYYYmmdd-HHMMSS>/<nome-do-teste>/`, contendo os arquivos que o NovaAct gerar (vídeos, logs etc.).
 
