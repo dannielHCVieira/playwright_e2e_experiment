@@ -190,7 +190,7 @@ jobs:
       # -------------------------------------------------------------------------
       - name: Install project dependencies
         working-directory: examples/${{ matrix.project }}
-        run: npm ci
+        run: npm i
 
       - name: Start local server
         working-directory: examples/${{ matrix.project }}
