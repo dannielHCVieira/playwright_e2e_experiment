@@ -1,0 +1,6 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Clique na checkbox 'Toggle Todo' do item 'Buy groceries'
+- Verifique se a checkbox 'Toggle Todo' está marcada
+- Verifique se o texto '0 items left' está visível
+- Verifique se o botão 'Clear completed' está visível
+- Verifique se o botão 'Delete' está visível

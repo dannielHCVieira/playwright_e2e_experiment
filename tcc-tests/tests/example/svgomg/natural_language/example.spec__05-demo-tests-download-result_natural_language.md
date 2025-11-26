@@ -1,0 +1,4 @@
+- Verifique se o atributo 'href' do elemento 'a[title=Download]' corresponde ao padrão /blob/
+- Clique no elemento 'a[title=Download]' e aguarde o evento de download ser disparado
+- Verifique se o nome sugerido do arquivo baixado é 'car-lite.svg'
+- Leia o conteúdo do arquivo baixado em UTF-8 e verifique se ele contém '<svg'

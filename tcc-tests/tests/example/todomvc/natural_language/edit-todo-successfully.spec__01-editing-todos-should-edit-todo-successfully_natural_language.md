@@ -1,0 +1,4 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Clique duas vezes no texto 'Buy groceries'
+- Digite 'Buy groceries and milk' no campo 'Edit' e pressione Enter
+- Verifique se o texto 'Buy groceries and milk' está visível

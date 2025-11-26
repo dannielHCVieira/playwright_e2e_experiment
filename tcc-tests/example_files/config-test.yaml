@@ -1,0 +1,59 @@
+- name: "Login test"
+  url: "https://buildstaging.com/pt-br"
+  prompt:
+    - "Click on 'Entrar'"
+    - "Click on 'Gerenciar meus negócios."
+    - "Login with 'Email' equals zoi@hotmart.com and 'Senha' equals 123456"
+  expected: false
+
+- name: "Search product test"
+  url: "https://hotmart.com/pt-br/marketplace"
+  prompt:
+    - "Procure um produto de educação alimentar"
+  expected: true
+
+- name: " Verificar Compra no checkout"
+  url: "https://pay.hotmart.com/J3864784O?sck=HOTMART_SITE_BEST_RATED&off=wqs21otu&hotfeature=33,34&_gl=1*1922kgs*_gcl_au*MTc1NjI0MDkxMi4xNzQ1MzIzNzAxLjE0MzQ1NjczNTQuMTc0ODg2NjMxMi4xNzQ4ODY2MzE3*_ga*MjYyMzk3NzY4LjE3NDgzNDkxNjc.*_ga_GQH2V1F11Q*czE3NDkxNDYzNDMkbzE3JGcxJHQxNzQ5MTQ2MzQ5JGo1NCRsMCRoMA..&bid=1749146352531"
+  prompt:
+    - "Preencha o campo 'Seu email': Inserir email válido 'zoi@hotmart.com', Email deve seguir formato RFC 5322"
+    - "Preencha o campo 'Confirme seu email': Inserir o mesmo email 'zoi@hotmart.com' para validação. Email deve seguir formato RFC 5322, Confirmação de email deve ser idêntica ao campo principal"
+    - "Preencha o campo 'Nome completo': Inserir nome completo válido (mínimo 2 palavras), Nome completo deve conter pelo menos nome e sobrenome"
+    - "Preencha o campo 'Celular': Inserir número de celular válido no formato nacional, Celular deve seguir padrão nacional válido"
+    - "Preenncha o campo de seleção de pagamento: Escolher opção 'Cartão de crédito'"
+    - "Preencha o campo 'Número do cartão': Inserir número de cartão válido (16 dígitos), Cartão deve passar validação de Luhn"
+    - "Preencha o campo 'Nome do titular': Inserir nome exatamente como aparece no cartão"
+    - "Preencha o campo 'Data de validade': Selecionar mês e ano válidos (formato MM/AA), Data de validade deve ser futura"
+    - "Preencha o campo 'CVV': Inserir código de segurança de 3 dígitos"
+    - "Preencha o campo 'Parcelas': Selecionar número de parcelas desejado"
+    - "Preencha o campo 'Verificação': Confirmar que todos os campos obrigatórios estão preenchidos corretamente,  Todos os campos marcados como obrigatórios devem estar preenchidos"
+    - "Clicar no botão 'Comprar agora' para processar a transação."
+  expected: true
+
+- name: "Search product test (schema)"
+  url: "https://hotmart.com/pt-br/marketplace"
+  prompt:
+    - "Procure um produto de educação alimentar"
+  expected:
+    product_name: "Produto de educação alimentar"
+    product_price: "100.00"
+    product_description: "Descrição do produto de educação alimentar"
+  schema_expected:
+    product_name:
+      type: "string"
+      description: "Nome do produto"
+    product_price:
+      type: "number"
+      description: "Preço do produto"
+    product_description:
+      type: "string"
+      description: "Descrição do produto"
+
+- name: "Search product test (schema on another file)"
+  url: "https://hotmart.com/pt-br/marketplace"
+  prompt:
+    - "Procure um produto de educação alimentar"
+  expected:
+    product_name: "Produto de educação alimentar"
+    product_price: "100.00"
+    product_description: "Descrição do produto de educação alimentar"
+  schema_expected: "path/to/schema.json"

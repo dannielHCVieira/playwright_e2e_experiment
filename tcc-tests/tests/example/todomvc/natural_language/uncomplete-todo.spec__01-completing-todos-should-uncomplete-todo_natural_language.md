@@ -1,0 +1,5 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Clique na caixa de seleção 'Toggle Todo'
+- Clique novamente na caixa de seleção 'Toggle Todo' para desmarcá-la
+- Verifique se a caixa de seleção 'Toggle Todo' não está marcada
+- Verifique se o texto '1 item left' está visível

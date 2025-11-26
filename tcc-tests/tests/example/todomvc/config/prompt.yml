@@ -1,0 +1,179 @@
+- name: add-multiple-todos
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Acesse a página inicial do aplicativo de lista de tarefas.
+  - No campo de texto identificado como "What needs to be done?", digite "Buy groceries"
+    e pressione Enter.
+  - No mesmo campo de texto, digite "Walk the dog" e pressione Enter.
+  - Novamente, no campo de texto, digite "Read a book" e pressione Enter.
+  - 'Valide que as três tarefas aparecem na lista na ordem de criação: "Buy groceries",
+    "Walk the dog", "Read a book".'
+  - Verifique que o contador exibe "3 items left".
+  - Confirme que o campo de texto está vazio após cada adição de tarefa.
+  expected: true
+- name: edit-completed-todo__01-editing-todos-should-edit-completed-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Clique no checkbox 'Toggle Todo'
+  - Dê um duplo clique no texto do todo com testid 'todo-title'
+  - Digite 'Buy groceries and milk' no campo 'Edit' e pressione Enter
+  - Verifique se o texto 'Buy groceries and milk' está visível
+  - Verifique se o checkbox 'Toggle Todo' está marcado
+  expected: true
+- name: uncomplete-todo__01-completing-todos-should-uncomplete-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Clique na caixa de seleção 'Toggle Todo'
+  - Clique novamente na caixa de seleção 'Toggle Todo' para desmarcá-la
+  - Verifique se a caixa de seleção 'Toggle Todo' não está marcada
+  - Verifique se o texto '1 item left' está visível
+  expected: true
+- name: edit-todo-successfully__01-editing-todos-should-edit-todo-successfully
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Clique duas vezes no texto 'Buy groceries'
+  - Digite 'Buy groceries and milk' no campo 'Edit' e pressione Enter
+  - Verifique se o texto 'Buy groceries and milk' está visível
+  expected: true
+- name: mark-all-as-complete__01-completing-todos-should-mark-all-as-complete
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+  - Clique na caixa de seleção '❯Mark all as complete'
+  - Verifique se a caixa de seleção '❯Mark all as complete' está marcada
+  - Verifique se o contador mostra '0 items left'
+  - Verifique se o botão 'Clear completed' está visível
+  expected: true
+- name: reject-whitespace-only-todo__01-adding-new-todos-should-reject-whitespace-only-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Clique no campo de texto 'What needs to be done?'
+  - Digite '   ' no campo 'What needs to be done?' e pressione Enter
+  - Verifique se a lista de tarefas (role 'list') não está visível
+  - Verifique se nenhum texto correspondente ao padrão '\d+ items? left' está visível
+  - Verifique se o campo 'What needs to be done?' possui o valor '   '
+  expected: true
+- name: reject-empty-todo__01-adding-new-todos-should-reject-empty-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Clique no campo de texto 'What needs to be done?'
+  - Pressione Enter
+  - Verifique se o elemento '.todo-list' não está visível
+  - Verifique se o elemento '.todo-count' não está visível
+  - Verifique se o campo de texto 'What needs to be done?' está focado
+  expected: true
+- name: unmark-all-as-complete__01-completing-todos-should-unmark-all-as-complete
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+  - Clique na checkbox '❯Mark all as complete'
+  - Clique na checkbox '❯Mark all as complete' novamente
+  - Verifique se a checkbox '❯Mark all as complete' não está marcada
+  - Verifique se a checkbox 'Toggle Todo' do item 'Buy groceries' não está marcada
+  - Verifique se a checkbox 'Toggle Todo' do item 'Walk the dog' não está marcada
+  - Verifique se a checkbox 'Toggle Todo' do item 'Read a book' não está marcada
+  - Verifique se o texto '3 items left' está visível
+  expected: true
+- name: add-todo-with-long-text__01-adding-new-todos-should-add-todo-with-long-text
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'This is a very long todo item to test the character limit and see how
+    the application handles extremely long text inputs that might break the layout
+    or cause other issues' no campo 'What needs to be done?' e pressione Enter
+  - Verifique se o texto 'This is a very long todo item to test the character limit
+    and see how the application handles extremely long text inputs that might break
+    the layout or cause other issues' está visível
+  - Verifique se o texto '1 item left' está visível
+  expected: true
+- name: add-multiple-todos__01-adding-new-todos-should-add-multiple-todos
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo de texto 'What needs to be done?' e pressione
+    Enter
+  - Digite 'Walk the dog' no campo de texto 'What needs to be done?' e pressione Enter
+  - Digite 'Read a book' no campo de texto 'What needs to be done?' e pressione Enter
+  - Verifique se os itens 'Buy groceries', 'Walk the dog' e 'Read a book' aparecem
+    na lista, nessa ordem
+  - Verifique se o texto '3 items left' está visível
+  - Verifique se o campo de texto 'What needs to be done?' está vazio
+  expected: true
+- name: cancel-edit-with-escape__01-editing-todos-should-cancel-edit-with-escape
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo de texto 'What needs to be done?' e pressione
+    Enter
+  - Clique duas vezes no texto 'Buy groceries'
+  - Digite 'Changed text' no campo de edição 'Edit'
+  - Pressione 'Escape'
+  - Verifique se o texto 'Buy groceries' está visível
+  expected: true
+- name: complete-single-todo__01-completing-todos-should-complete-single-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Clique na checkbox 'Toggle Todo' do item 'Buy groceries'
+  - Verifique se a checkbox 'Toggle Todo' está marcada
+  - Verifique se o texto '0 items left' está visível
+  - Verifique se o botão 'Clear completed' está visível
+  - Verifique se o botão 'Delete' está visível
+  expected: true
+- name: add-single-valid-todo__01-adding-new-todos-should-add-single-valid-todo
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Clique no campo de texto 'What needs to be done?'
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Verifique se o item da lista com testid 'todo-item' está visível
+  - Verifique se o texto 'Buy groceries' está visível
+  - Verifique se o texto '1 item left' está visível
+  - Verifique se o campo de texto 'What needs to be done?' possui valor vazio
+  - Verifique se a caixa de seleção '❯Mark all as complete' está visível
+  expected: true
+- name: seed__01-seed
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Abra a aplicação 'seed' no navegador
+  - Verifique se a página 'seed' está carregada e exibe o texto 'seed'
+  - Clique no botão 'Iniciar gravação' para começar a gravar as interações de teste
+  - Verifique se o indicador 'Gravando' está visível na interface
+  expected: true
+- name: add-todo-with-special-characters__01-adding-new-todos-should-add-todo-with-special-characters
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - 'Digite ''Test with special chars: @#$%^&*()'' no campo ''What needs to be done?''
+    e pressione Enter'
+  - 'Verifique se o texto ''Test with special chars: @#$%^&*()'' está visível'
+  - Verifique se o texto '1 item left' está visível
+  expected: true
+- name: delete-todo-by-clearing-text__01-editing-todos-should-delete-todo-by-clearing-text
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Dê um duplo clique no elemento com testid 'todo-title' que contém o texto 'Buy
+    groceries'
+  - Apague todo o texto no campo de edição 'Edit' e pressione Enter
+  - Verifique se o campo de texto 'What needs to be done?' está visível
+  expected: true
+- name: complete-multiple-todos__01-completing-todos-should-complete-multiple-todos
+  url: https://demo.playwright.dev/todomvc
+  prompt:
+  - Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+  - Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+  - Clique na caixa de seleção ao lado de 'Buy groceries' rotulada 'Toggle Todo'
+  - Clique na caixa de seleção ao lado de 'Read a book' rotulada 'Toggle Todo'
+  - Verifique se a caixa de seleção ao lado de 'Buy groceries' rotulada 'Toggle Todo'
+    está marcada
+  - Verifique se a caixa de seleção ao lado de 'Read a book' rotulada 'Toggle Todo'
+    está marcada
+  - Verifique se o texto '1 item left' está visível
+  - Verifique se o botão 'Clear completed' está visível
+  - Verifique se a caixa de seleção ao lado de 'Walk the dog' rotulada 'Toggle Todo'
+    não está marcada
+  expected: true

@@ -1,0 +1,4 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Dê um duplo clique no elemento com testid 'todo-title' que contém o texto 'Buy groceries'
+- Apague todo o texto no campo de edição 'Edit' e pressione Enter
+- Verifique se o campo de texto 'What needs to be done?' está visível

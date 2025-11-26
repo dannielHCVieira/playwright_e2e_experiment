@@ -1,0 +1,8 @@
+- Abra a página '/' no navegador
+- Verifique se o elemento '.battery-percentage' contém o texto '10%'
+- Execute no contexto da página o script "window.mockBattery._setLevel(0.275)" para atualizar o nível da bateria para 27.5%
+- Verifique se o elemento '.battery-percentage' contém o texto '27.5%'
+- Verifique se o elemento '.battery-status' contém o texto 'Battery'
+- Execute no contexto da página o script "window.mockBattery._setCharging(true)" para emular adaptador conectado
+- Verifique se o elemento '.battery-status' contém o texto 'Adapter'
+- Verifique se o elemento '.battery-fully' contém o texto '00:30'

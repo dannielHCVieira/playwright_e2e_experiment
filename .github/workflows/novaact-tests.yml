@@ -1,0 +1,310 @@
+name: NovaAct Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      skip_convert:
+        description: 'Pular etapa de conversão (usar configs existentes)'
+        type: boolean
+        default: true
+      rate_limit_batch:
+        description: 'Número de ações antes de pausar (rate limiting)'
+        default: '50'
+        type: string
+      rate_limit_sleep:
+        description: 'Segundos de pausa após batch (rate limiting)'
+        default: '10'
+        type: string
+
+jobs:
+  # ===========================================================================
+  # JOB 1: Conversão de código para configs YAML/JSON
+  # ===========================================================================
+  convert:
+    name: Convert code to configs
+    if: ${{ github.event.inputs.skip_convert != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # -------------------------------------------------------------------------
+      # STEP 1.1: Conversão code2NL (venv com langchain)
+      # -------------------------------------------------------------------------
+      - name: Create langchain venv
+        working-directory: tcc-tests
+        run: |
+          uv venv .venv-langchain
+          source .venv-langchain/bin/activate
+          uv pip install langchain-openai python-dotenv pydantic
+
+      - name: Convert code to natural language
+        working-directory: tcc-tests
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          source .venv-langchain/bin/activate
+          
+          PROJECTS="todomvc svgomg mock-filesystem mock-battery"
+          
+          echo "📁 Processando projetos: $PROJECTS"
+          
+          for project in $PROJECTS; do
+            echo "🔄 Convertendo código de $project para linguagem natural..."
+            python -m scripts.converter.convert_code_to_natural_language \
+              ../examples/$project --model gpt-4o-mini || echo "⚠️ Falha em $project, continuando..."
+          done
+
+      # -------------------------------------------------------------------------
+      # STEP 1.2: Geração de configs YAML/JSON (venv limpo, sem langchain)
+      # -------------------------------------------------------------------------
+      - name: Create clean venv for config generation
+        working-directory: tcc-tests
+        run: |
+          uv venv .venv-config
+          source .venv-config/bin/activate
+          uv pip install pyyaml pydantic
+
+      - name: Generate YAML/JSON configs
+        working-directory: tcc-tests
+        run: |
+          source .venv-config/bin/activate
+          
+          PROJECTS="todomvc svgomg mock-filesystem mock-battery"
+          
+          echo "📁 Gerando configs para: $PROJECTS"
+          
+          for project in $PROJECTS; do
+            echo "🔄 Gerando config para $project..."
+            python -m scripts.converter.generate_config $project || echo "⚠️ Falha em $project, continuando..."
+          done
+
+      - name: Upload generated configs
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaact-configs
+          path: tcc-tests/tests/example/*/config/
+          if-no-files-found: warn
+
+  # ===========================================================================
+  # JOB 2: Testes de projetos EXTERNOS (já estão online)
+  # ===========================================================================
+  test-external:
+    name: Test (${{ matrix.project }})
+    needs: convert
+    if: always() && (needs.convert.result == 'success' || needs.convert.result == 'skipped')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - todomvc
+          - svgomg
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # Download configs gerados (se o job convert rodou)
+      - name: Download generated configs
+        if: needs.convert.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: novaact-configs
+          path: tcc-tests/tests/example/
+
+      - name: Install dependencies
+        working-directory: tcc-tests
+        run: uv sync
+
+      - name: Install Playwright browsers
+        working-directory: tcc-tests
+        run: uv run playwright install --with-deps chromium
+
+      - name: Execute NovaAct suite
+        working-directory: tcc-tests
+        env:
+          NOVA_ACT_API_KEY: ${{ secrets.NOVA_ACT_API_KEY }}
+        run: |
+          uv run python scripts/executer/execute_nova_act.py \
+            --suite @example/${{ matrix.project }} \
+            --logs-dir artifacts \
+            --output-json reports \
+            --rate-limit-batch ${{ github.event.inputs.rate_limit_batch || '50' }} \
+            --rate-limit-sleep ${{ github.event.inputs.rate_limit_sleep || '10' }}
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaact-${{ matrix.project }}-artifacts
+          path: |
+            tcc-tests/artifacts/
+            tcc-tests/reports/
+          if-no-files-found: ignore
+
+  # ===========================================================================
+  # JOB 3: Testes de projetos LOCAIS (precisam de deploy)
+  # ===========================================================================
+  test-local:
+    name: Test (${{ matrix.project }}) [local server]
+    needs: convert
+    if: always() && (needs.convert.result == 'success' || needs.convert.result == 'skipped')
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - mock-battery
+          - mock-filesystem
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      # Download configs gerados (se o job convert rodou)
+      - name: Download generated configs
+        if: needs.convert.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: novaact-configs
+          path: tcc-tests/tests/example/
+
+      # -------------------------------------------------------------------------
+      # Deploy do servidor local para o projeto
+      # -------------------------------------------------------------------------
+      - name: Install project dependencies
+        working-directory: examples/${{ matrix.project }}
+        run: npm ci
+
+      - name: Start local server
+        working-directory: examples/${{ matrix.project }}
+        run: |
+          npm run start &
+          echo "⏳ Aguardando servidor iniciar na porta 9900..."
+          npx wait-on http://localhost:9900 --timeout 30000
+          echo "✅ Servidor iniciado!"
+
+      # -------------------------------------------------------------------------
+      # Execução dos testes NovaAct
+      # -------------------------------------------------------------------------
+      - name: Install NovaAct dependencies
+        working-directory: tcc-tests
+        run: uv sync
+
+      - name: Install Playwright browsers
+        working-directory: tcc-tests
+        run: uv run playwright install --with-deps chromium
+
+      - name: Execute NovaAct suite
+        working-directory: tcc-tests
+        env:
+          NOVA_ACT_API_KEY: ${{ secrets.NOVA_ACT_API_KEY }}
+        run: |
+          uv run python scripts/executer/execute_nova_act.py \
+            --suite @example/${{ matrix.project }} \
+            --logs-dir artifacts \
+            --output-json reports \
+            --rate-limit-batch ${{ github.event.inputs.rate_limit_batch || '50' }} \
+            --rate-limit-sleep ${{ github.event.inputs.rate_limit_sleep || '10' }}
+
+      - name: Upload test artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaact-${{ matrix.project }}-artifacts
+          path: |
+            tcc-tests/artifacts/
+            tcc-tests/reports/
+          if-no-files-found: ignore
+
+  # ===========================================================================
+  # JOB 4: Consolidação dos resultados
+  # ===========================================================================
+  summarize:
+    name: Summarize results
+    needs: [test-external, test-local]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: all-artifacts
+          pattern: novaact-*-artifacts
+          merge-multiple: false
+
+      - name: Generate summary
+        run: |
+          echo "# 🧪 NovaAct Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Projetos Externos (online)" >> $GITHUB_STEP_SUMMARY
+          echo "| Projeto | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for project in todomvc svgomg; do
+            dir="all-artifacts/novaact-${project}-artifacts"
+            if [ -d "$dir" ]; then
+              report=$(find "$dir" -name "*.json" -path "*/reports/*" 2>/dev/null | head -1)
+              
+              if [ -n "$report" ] && [ -f "$report" ]; then
+                passed=$(cat "$report" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('passed',0))" 2>/dev/null || echo "?")
+                failed=$(cat "$report" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('failed',0))" 2>/dev/null || echo "?")
+                
+                if [ "$failed" == "0" ]; then
+                  echo "| $project | ✅ $passed passed, $failed failed |" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "| $project | ❌ $passed passed, $failed failed |" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "| $project | ⚠️ No report found |" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "| $project | ⏭️ Skipped or not run |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Projetos Locais (com deploy)" >> $GITHUB_STEP_SUMMARY
+          echo "| Projeto | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          for project in mock-battery mock-filesystem; do
+            dir="all-artifacts/novaact-${project}-artifacts"
+            if [ -d "$dir" ]; then
+              report=$(find "$dir" -name "*.json" -path "*/reports/*" 2>/dev/null | head -1)
+              
+              if [ -n "$report" ] && [ -f "$report" ]; then
+                passed=$(cat "$report" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('passed',0))" 2>/dev/null || echo "?")
+                failed=$(cat "$report" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('summary',{}).get('failed',0))" 2>/dev/null || echo "?")
+                
+                if [ "$failed" == "0" ]; then
+                  echo "| $project | ✅ $passed passed, $failed failed |" >> $GITHUB_STEP_SUMMARY
+                else
+                  echo "| $project | ❌ $passed passed, $failed failed |" >> $GITHUB_STEP_SUMMARY
+                fi
+              else
+                echo "| $project | ⚠️ No report found |" >> $GITHUB_STEP_SUMMARY
+              fi
+            else
+              echo "| $project | ⏭️ Skipped or not run |" >> $GITHUB_STEP_SUMMARY
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📁 Artifacts uploaded for each project" >> $GITHUB_STEP_SUMMARY

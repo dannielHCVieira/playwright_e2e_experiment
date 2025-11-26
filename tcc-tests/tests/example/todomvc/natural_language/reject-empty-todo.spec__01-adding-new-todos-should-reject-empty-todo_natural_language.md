@@ -1,0 +1,5 @@
+- Clique no campo de texto 'What needs to be done?'
+- Pressione Enter
+- Verifique se o elemento '.todo-list' não está visível
+- Verifique se o elemento '.todo-count' não está visível
+- Verifique se o campo de texto 'What needs to be done?' está focado

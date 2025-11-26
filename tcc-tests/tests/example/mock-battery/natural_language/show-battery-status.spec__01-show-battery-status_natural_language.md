@@ -1,0 +1,4 @@
+- Navegue para a URL '/'
+- Verifique se o seletor '.battery-percentage' exibe o texto '90%'
+- Verifique se o seletor '.battery-status' exibe o texto 'Adapter'
+- Verifique se o seletor '.battery-fully' exibe o texto '00:30'

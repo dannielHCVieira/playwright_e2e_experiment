@@ -1,0 +1,4 @@
+- Abra a aplicação 'seed' no navegador
+- Verifique se a página 'seed' está carregada e exibe o texto 'seed'
+- Clique no botão 'Iniciar gravação' para começar a gravar as interações de teste
+- Verifique se o indicador 'Gravando' está visível na interface

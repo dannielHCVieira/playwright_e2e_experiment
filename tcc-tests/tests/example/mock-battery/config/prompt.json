@@ -1,0 +1,51 @@
+[
+  {
+    "name": "show-battery-status__01-show-battery-status",
+    "url": "http://localhost:9900/",
+    "prompt": [
+      "Navegue para a URL '/'",
+      "Verifique se o seletor '.battery-percentage' exibe o texto '90%'",
+      "Verifique se o seletor '.battery-status' exibe o texto 'Adapter'",
+      "Verifique se o seletor '.battery-fully' exibe o texto '00:30'"
+    ],
+    "expected": true
+  },
+  {
+    "name": "update-battery-status__01-should-update-ui-when-battery-status-changes",
+    "url": "http://localhost:9900/",
+    "prompt": [
+      "Abra a página '/' no navegador",
+      "Verifique se o elemento '.battery-percentage' contém o texto '10%'",
+      "Execute no contexto da página o script \"window.mockBattery._setLevel(0.275)\" para atualizar o nível da bateria para 27.5%",
+      "Verifique se o elemento '.battery-percentage' contém o texto '27.5%'",
+      "Verifique se o elemento '.battery-status' contém o texto 'Battery'",
+      "Execute no contexto da página o script \"window.mockBattery._setCharging(true)\" para emular adaptador conectado",
+      "Verifique se o elemento '.battery-status' contém o texto 'Adapter'",
+      "Verifique se o elemento '.battery-fully' contém o texto '00:30'"
+    ],
+    "expected": true
+  },
+  {
+    "name": "verify-calls__01-verify-battery-calls",
+    "url": "http://localhost:9900/",
+    "prompt": [
+      "Navegue para a rota '/'",
+      "Verifique se o elemento com seletor '.battery-percentage' contém o texto '75%'",
+      "Verifique se a variável 'log' é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']"
+    ],
+    "expected": true
+  },
+  {
+    "name": "update-battery-status__02-verify-api-calls",
+    "url": "http://localhost:9900/",
+    "prompt": [
+      "Navegue para a rota '/'",
+      "Verifique se o texto '10%' está visível no elemento com seletor '.battery-percentage'",
+      "Verifique se a variável de log é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']",
+      "Limpe a variável 'log' definindo-a como []",
+      "No contexto da página, chame window.mockBattery._setLevel(0.275)",
+      "Verifique se a variável 'log' está vazia ([]) confirmando que 'getBattery' não foi chamado"
+    ],
+    "expected": true
+  }
+]

@@ -1,0 +1,5 @@
+- Substitua {user} e {repo} pelos valores do repositório de teste
+- Envie uma requisição POST para /repos/{user}/{repo}/issues com cabeçalho "Content-Type: application/json" e corpo JSON {"title": "[Bug] report 1", "body": "Bug description"}
+- Verifique se a resposta da requisição POST retornou status HTTP 2xx (response.ok é true)
+- Envie uma requisição GET para /repos/{user}/{repo}/issues
+- Verifique se a resposta da requisição GET retornou status HTTP 2xx e se o JSON retornado contém um objeto com "title": "[Bug] report 1" e "body": "Bug description"

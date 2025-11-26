@@ -1,0 +1,5 @@
+- Envie uma requisição POST para '/repos/${user}/${repo}/issues' com o corpo JSON { "title": "[Feature] request 1", "body": "Feature description" }
+- Verifique se a resposta da requisição POST retornou status OK
+- Envie uma requisição GET para '/repos/${user}/${repo}/issues'
+- Verifique se a resposta da requisição GET retornou status OK
+- Verifique se o JSON retornado pela requisição GET contém um objeto com "title" igual a '[Feature] request 1' e "body" igual a 'Feature description'

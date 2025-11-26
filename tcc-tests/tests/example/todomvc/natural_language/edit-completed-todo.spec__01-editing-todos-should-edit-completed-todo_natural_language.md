@@ -1,0 +1,6 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Clique no checkbox 'Toggle Todo'
+- Dê um duplo clique no texto do todo com testid 'todo-title'
+- Digite 'Buy groceries and milk' no campo 'Edit' e pressione Enter
+- Verifique se o texto 'Buy groceries and milk' está visível
+- Verifique se o checkbox 'Toggle Todo' está marcado

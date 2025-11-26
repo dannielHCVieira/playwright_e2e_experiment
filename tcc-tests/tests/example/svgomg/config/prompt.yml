@@ -1,0 +1,71 @@
+- name: example__04-demo-tests-reset-settings
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - Clique no controle de alternância com o texto 'Show original'
+  - Verifique se o controle de alternância 'Show original' está marcado
+  - Clique no botão 'Reset all'
+  - Verifique se o controle de alternância 'Show original' não está marcado
+  expected: true
+- name: example__02-demo-tests-verify-default-global-settings
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - Verifique se os itens em '.settings-scroller .global .setting-item-toggle' estão,
+    na ordem, 'Show original', 'Compare gzipped', 'Prettify markup', 'Multipass'
+  - Verifique se o toggle com texto 'Show original' não está marcado
+  - Verifique se o toggle com texto 'Compare gzipped' está marcado
+  - Verifique se o toggle com texto 'Prettify markup' não está marcado
+  - Verifique se o toggle com texto 'Multipass' não está marcado
+  expected: true
+- name: example__06-open-svg
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - Clique no texto 'Open SVG' e aguarde o seletor de arquivo (evento filechooser)
+    abrir
+  - Defina no seletor de arquivo um arquivo com nome 'file.svg', mimeType 'image/svg+xml'
+    e conteúdo '<svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0
+    24 24" width="24px" fill="#000000"><path d="M0 0h24v24H0z" fill="none"/><path
+    d="M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0
+    3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42
+    19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5
+    5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5
+    0 2.89-3.14 5.74-7.9 10.05z"/></svg>'
+  - Verifique se dentro do frame com a classe '.svg-frame' existe um elemento 'svg'
+    cuja marcação externa (outerHTML) corresponda ao padrão /<svg.*<\/svg>/
+  expected: true
+- name: example__03-demo-tests-verify-default-features
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Clean up attribute
+    whitespace' está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Clean up IDs' está
+    marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Collapse useless groups'
+    está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Convert non-eccentric
+    <ellipse> to <circle>' está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Inline styles' está
+    marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Prefer viewBox to
+    width/height' não está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Remove raster images'
+    não está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Remove script elements'
+    não está marcado
+  - Verifique se o elemento '.setting-item-toggle' com o texto 'Remove style elements'
+    não está marcado
+  expected: true
+- name: example__05-demo-tests-download-result
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - Verifique se o atributo 'href' do elemento 'a[title=Download]' corresponde ao
+    padrão /blob/
+  - Clique no elemento 'a[title=Download]' e aguarde o evento de download ser disparado
+  - Verifique se o nome sugerido do arquivo baixado é 'car-lite.svg'
+  - Leia o conteúdo do arquivo baixado em UTF-8 e verifique se ele contém '<svg'
+  expected: true
+- name: example__01-verify-menu-items
+  url: https://demo.playwright.dev/svgomg
+  prompt:
+  - 'Verifique se os elementos localizados por ''.menu li'' possuem, na ordem, os
+    textos: ''Open SVG'', ''Paste markup'', ''Demo'', ''Contribute'''
+  expected: true

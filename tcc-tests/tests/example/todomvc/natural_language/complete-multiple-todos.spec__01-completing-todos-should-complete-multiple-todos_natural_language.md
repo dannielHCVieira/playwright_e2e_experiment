@@ -1,0 +1,10 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+- Clique na caixa de seleção ao lado de 'Buy groceries' rotulada 'Toggle Todo'
+- Clique na caixa de seleção ao lado de 'Read a book' rotulada 'Toggle Todo'
+- Verifique se a caixa de seleção ao lado de 'Buy groceries' rotulada 'Toggle Todo' está marcada
+- Verifique se a caixa de seleção ao lado de 'Read a book' rotulada 'Toggle Todo' está marcada
+- Verifique se o texto '1 item left' está visível
+- Verifique se o botão 'Clear completed' está visível
+- Verifique se a caixa de seleção ao lado de 'Walk the dog' rotulada 'Toggle Todo' não está marcada

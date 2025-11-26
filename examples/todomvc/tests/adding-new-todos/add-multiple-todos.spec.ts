@@ -8,7 +8,7 @@ test.describe('Adding New Todos', () => {
     // Add first todo: "Buy groceries" (type and press Enter)
     await page.getByRole('textbox', { name: 'What needs to be done?' }).fill('Buy groceries');
     await page.getByRole('textbox', { name: 'What needs to be done?' }).press('Enter');
-
+ 
     // Add second todo: "Walk the dog" (type and press Enter)
     await page.getByRole('textbox', { name: 'What needs to be done?' }).fill('Walk the dog');
     await page.getByRole('textbox', { name: 'What needs to be done?' }).press('Enter');

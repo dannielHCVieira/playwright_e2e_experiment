@@ -1,0 +1,5 @@
+- Clique no campo de texto 'What needs to be done?'
+- Digite '   ' no campo 'What needs to be done?' e pressione Enter
+- Verifique se a lista de tarefas (role 'list') não está visível
+- Verifique se nenhum texto correspondente ao padrão '\d+ items? left' está visível
+- Verifique se o campo 'What needs to be done?' possui o valor '   '

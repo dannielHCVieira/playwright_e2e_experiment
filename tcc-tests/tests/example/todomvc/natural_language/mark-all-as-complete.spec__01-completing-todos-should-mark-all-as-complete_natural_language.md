@@ -1,0 +1,7 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+- Clique na caixa de seleção '❯Mark all as complete'
+- Verifique se a caixa de seleção '❯Mark all as complete' está marcada
+- Verifique se o contador mostra '0 items left'
+- Verifique se o botão 'Clear completed' está visível

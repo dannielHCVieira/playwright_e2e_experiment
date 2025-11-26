@@ -1,0 +1,3 @@
+- Digite 'Test with special chars: @#$%^&*()' no campo 'What needs to be done?' e pressione Enter
+- Verifique se o texto 'Test with special chars: @#$%^&*()' está visível
+- Verifique se o texto '1 item left' está visível

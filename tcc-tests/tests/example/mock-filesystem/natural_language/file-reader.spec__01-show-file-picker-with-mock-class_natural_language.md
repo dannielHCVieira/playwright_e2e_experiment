@@ -1,0 +1,3 @@
+- Acesse a página '/file-picker.html'
+- Clique no botão 'Open File'
+- Verifique se o textarea contém o valor 'Test content.'

@@ -1,0 +1,10 @@
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Walk the dog' no campo 'What needs to be done?' e pressione Enter
+- Digite 'Read a book' no campo 'What needs to be done?' e pressione Enter
+- Clique na checkbox '❯Mark all as complete'
+- Clique na checkbox '❯Mark all as complete' novamente
+- Verifique se a checkbox '❯Mark all as complete' não está marcada
+- Verifique se a checkbox 'Toggle Todo' do item 'Buy groceries' não está marcada
+- Verifique se a checkbox 'Toggle Todo' do item 'Walk the dog' não está marcada
+- Verifique se a checkbox 'Toggle Todo' do item 'Read a book' não está marcada
+- Verifique se o texto '3 items left' está visível

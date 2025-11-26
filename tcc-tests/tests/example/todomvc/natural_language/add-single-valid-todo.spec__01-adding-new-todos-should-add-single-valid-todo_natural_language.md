@@ -1,0 +1,7 @@
+- Clique no campo de texto 'What needs to be done?'
+- Digite 'Buy groceries' no campo 'What needs to be done?' e pressione Enter
+- Verifique se o item da lista com testid 'todo-item' está visível
+- Verifique se o texto 'Buy groceries' está visível
+- Verifique se o texto '1 item left' está visível
+- Verifique se o campo de texto 'What needs to be done?' possui valor vazio
+- Verifique se a caixa de seleção '❯Mark all as complete' está visível

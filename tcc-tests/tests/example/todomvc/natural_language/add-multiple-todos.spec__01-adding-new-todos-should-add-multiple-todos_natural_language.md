@@ -1,0 +1,6 @@
+- Digite 'Buy groceries' no campo de texto 'What needs to be done?' e pressione Enter
+- Digite 'Walk the dog' no campo de texto 'What needs to be done?' e pressione Enter
+- Digite 'Read a book' no campo de texto 'What needs to be done?' e pressione Enter
+- Verifique se os itens 'Buy groceries', 'Walk the dog' e 'Read a book' aparecem na lista, nessa ordem
+- Verifique se o texto '3 items left' está visível
+- Verifique se o campo de texto 'What needs to be done?' está vazio

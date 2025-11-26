@@ -1,0 +1,3 @@
+- Digite 'This is a very long todo item to test the character limit and see how the application handles extremely long text inputs that might break the layout or cause other issues' no campo 'What needs to be done?' e pressione Enter
+- Verifique se o texto 'This is a very long todo item to test the character limit and see how the application handles extremely long text inputs that might break the layout or cause other issues' está visível
+- Verifique se o texto '1 item left' está visível
