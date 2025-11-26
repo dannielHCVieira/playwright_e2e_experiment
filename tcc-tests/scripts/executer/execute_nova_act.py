@@ -21,6 +21,14 @@ except ImportError:  # pragma: no cover
     from nova_executor import NovaActExecutor, NovaActResult
 
 
+def _env_flag(env_var: str, default: bool = False) -> bool:
+    """Retorna True quando env estiver definido com valor truthy."""
+    value = os.getenv(env_var)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Executa testes NovaAct a partir de arquivos JSON/YAML de configuração.",
@@ -272,11 +280,3 @@ def _slugify_filename(value: str) -> str:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
-
-def _env_flag(env_var: str, default: bool = False) -> bool:
-    """Retorna True quando env estiver definido com valor truthy."""
-    value = os.getenv(env_var)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
