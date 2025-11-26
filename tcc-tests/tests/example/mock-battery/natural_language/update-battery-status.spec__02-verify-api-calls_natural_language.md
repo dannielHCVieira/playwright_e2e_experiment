@@ -1,6 +1,5 @@
-- Navegue para '/'
 - Verifique se o elemento '.battery-percentage' contém o texto '10%'
-- Verifique se a variável 'log' é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']
-- Defina a variável 'log' como []
-- Execute no contexto da página o código window.mockBattery._setLevel(0.275)
-- Verifique se a variável 'log' está vazia (igual a [])
+- Verifique se a variável global 'log' é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']
+- Zere a variável global 'log' definindo-a como []
+- Execute no contexto da página o script JavaScript: window.mockBattery._setLevel(0.275)
+- Verifique se a variável global 'log' é igual a []

@@ -32,6 +32,7 @@ class TestConverter:
            - CORRETO: "Digite 'texto' no campo 'X' e pressione Enter"
            - ERRADO: "Digite 'texto' no campo 'X'" seguido de "Pressione 'Enter'"
         5. Ao mencionar Enter, use apenas "pressione Enter" (sem aspas, sem especificar tecla ou campo).
+        6. O primeiro passo NUNCA deve ser "acesse a página X". O modelo já irá abrir na página que deve ser testada.
         
         EXEMPLO DE SAÍDA ESPERADA:
         - Digite 'admin' no campo de usuário e pressione Enter

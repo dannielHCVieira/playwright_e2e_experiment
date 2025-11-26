@@ -1,4 +1,3 @@
-- Navegue para a página root ('/')
-- Verifique se o texto '90%' está visível no elemento com o seletor '.battery-percentage'
-- Verifique se o texto 'Adapter' está visível no elemento com o seletor '.battery-status'
-- Verifique se o texto '00:30' está visível no elemento com o seletor '.battery-fully'
+- Verifique se o elemento '.battery-percentage' contém o texto '90%'
+- Verifique se o elemento '.battery-status' contém o texto 'Adapter'
+- Verifique se o elemento '.battery-fully' contém o texto '00:30'

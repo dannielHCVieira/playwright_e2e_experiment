@@ -1,3 +1,2 @@
-- Navegue para a rota '/'
-- Verifique se o elemento '.battery-percentage' contém exatamente o texto '75%'
-- Verifique se a variável 'log' é exatamente ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange'] na mesma ordem
+- Verifique se o texto '75%' está visível no elemento com a classe '.battery-percentage'
+- Verifique se a variável 'log' é igual ao array ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']

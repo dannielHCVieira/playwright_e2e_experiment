@@ -1,15 +1,13 @@
 - name: directory-reader__01-should-display-directory-tree
   url: http://localhost:9900/ls-dir.html
   prompt:
-  - Abra a página '/ls-dir.html'
   - Clique no botão 'Open directory'
-  - Verifique se os elementos '#dir div' exibem, na ordem, os textos 'file1', 'dir1',
-    'file2', 'file3', 'dir2', 'file4', 'file5'
+  - 'Verifique se os elementos dentro do seletor ''#dir div'' apresentam, na ordem,
+    os textos: ''file1'', ''dir1'', ''file2'', ''file3'', ''dir2'', ''file4'', ''file5'''
   expected: true
 - name: file-reader__01-show-file-picker-with-mock-class
   url: http://localhost:9900/ls-dir.html
   prompt:
-  - Acesse a página '/file-picker.html'
   - Clique no botão 'Open File'
-  - Verifique se o textarea contém o valor 'Test content.'
+  - Verifique se o campo 'textarea' possui o valor 'Test content.'
   expected: true
