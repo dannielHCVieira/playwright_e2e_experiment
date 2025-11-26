@@ -1,3 +1,3 @@
 - Abra a página '/ls-dir.html'
 - Clique no botão 'Open directory'
-- Verifique se os elementos '#dir div' exibem, na ordem, os textos 'file1', 'dir1', 'file2', 'file3', 'dir2', 'file4', 'file5'
+- Verifique se os elementos '#dir div' exibem exatamente, na ordem, os textos 'file1', 'dir1', 'file2', 'file3', 'dir2', 'file4', 'file5'

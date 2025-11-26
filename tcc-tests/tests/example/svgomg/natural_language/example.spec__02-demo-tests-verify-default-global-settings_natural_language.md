@@ -1,4 +1,4 @@
-- Verifique se os itens em '.settings-scroller .global .setting-item-toggle' estão, na ordem, 'Show original', 'Compare gzipped', 'Prettify markup', 'Multipass'
+- Verifique se a lista de itens localizada em '.settings-scroller .global .setting-item-toggle' contém exatamente os textos 'Show original', 'Compare gzipped', 'Prettify markup', 'Multipass'
 - Verifique se o toggle com texto 'Show original' não está marcado
 - Verifique se o toggle com texto 'Compare gzipped' está marcado
 - Verifique se o toggle com texto 'Prettify markup' não está marcado

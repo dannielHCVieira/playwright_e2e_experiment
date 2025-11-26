@@ -1,4 +1,4 @@
-- Clique no controle de alternância com o texto 'Show original'
-- Verifique se o controle de alternância 'Show original' está marcado
+- Clique no toggle com o texto 'Show original'
+- Verifique se o toggle 'Show original' está marcado
 - Clique no botão 'Reset all'
-- Verifique se o controle de alternância 'Show original' não está marcado
+- Verifique se o toggle 'Show original' não está marcado

@@ -59,7 +59,7 @@ jobs:
           for project in $PROJECTS; do
             echo "🔄 Convertendo código de $project para linguagem natural..."
             python -m scripts.converter.convert_code_to_natural_language \
-              ../examples/$project --model gpt-4o-mini || echo "⚠️ Falha em $project, continuando..."
+              ../examples/$project || echo "⚠️ Falha em $project, continuando..."
           done
 
       # -------------------------------------------------------------------------

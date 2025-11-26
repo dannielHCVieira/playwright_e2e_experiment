@@ -1,9 +1,9 @@
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Clean up attribute whitespace' está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Clean up IDs' está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Collapse useless groups' está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Convert non-eccentric <ellipse> to <circle>' está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Inline styles' está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Prefer viewBox to width/height' não está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Remove raster images' não está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Remove script elements' não está marcado
-- Verifique se o elemento '.setting-item-toggle' com o texto 'Remove style elements' não está marcado
+- Verifique se a opção 'Clean up attribute whitespace' está marcada
+- Verifique se a opção 'Clean up IDs' está marcada
+- Verifique se a opção 'Collapse useless groups' está marcada
+- Verifique se a opção 'Convert non-eccentric <ellipse> to <circle>' está marcada
+- Verifique se a opção 'Inline styles' está marcada
+- Verifique se a opção 'Prefer viewBox to width/height' não está marcada
+- Verifique se a opção 'Remove raster images' não está marcada
+- Verifique se a opção 'Remove script elements' não está marcada
+- Verifique se a opção 'Remove style elements' não está marcada

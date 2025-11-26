@@ -1,1 +1,1 @@
-- Verifique se os elementos localizados por '.menu li' possuem, na ordem, os textos: 'Open SVG', 'Paste markup', 'Demo', 'Contribute'
+- Verifique se os elementos '.menu li' exibem, na ordem, os textos 'Open SVG', 'Paste markup', 'Demo' e 'Contribute'

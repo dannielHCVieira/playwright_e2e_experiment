@@ -1,6 +1,6 @@
-- Navegue para a rota '/'
-- Verifique se o texto '10%' está visível no elemento com seletor '.battery-percentage'
-- Verifique se a variável de log é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']
-- Limpe a variável 'log' definindo-a como []
-- No contexto da página, chame window.mockBattery._setLevel(0.275)
-- Verifique se a variável 'log' está vazia ([]) confirmando que 'getBattery' não foi chamado
+- Navegue para '/'
+- Verifique se o elemento '.battery-percentage' contém o texto '10%'
+- Verifique se a variável 'log' é igual a ['getBattery', 'addEventListener:chargingchange', 'addEventListener:levelchange']
+- Defina a variável 'log' como []
+- Execute no contexto da página o código window.mockBattery._setLevel(0.275)
+- Verifique se a variável 'log' está vazia (igual a [])
