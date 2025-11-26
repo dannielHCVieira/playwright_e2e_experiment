@@ -36,3 +36,7 @@ test-results
 .eslintcache
 playwright.env
 /firefox/
+/tcc-tests/logs/
+/tcc-tests/reports/
+/tcc-tests/tcc-tests/artifacts/
+/tcc-tests/tests_ipynb/
