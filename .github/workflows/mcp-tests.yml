@@ -352,34 +352,9 @@ jobs:
 
       - name: Collect MCP JSON reports
         run: |
-          python3 <<'PY'
-from pathlib import Path
-import shutil
-
-source_root = Path('all-artifacts')
-dest = Path('report-inputs')
-
-if dest.exists():
-    shutil.rmtree(dest)
-dest.mkdir(parents=True, exist_ok=True)
-
-if not source_root.exists():
-    print("Diretório all-artifacts não encontrado; nenhuma coleta será realizada.")
-    raise SystemExit(0)
-
-found = False
-for json_file in source_root.rglob('mcp-report*.json'):
-    if 'reports' not in json_file.parts:
-        continue
-    slug = next((part for part in json_file.parts if part.startswith('mcp-') and part.endswith('-artifacts')), 'report')
-    target = dest / f'{slug}__{json_file.name}'
-    shutil.copy2(json_file, target)
-    print(f'Copiado {json_file} -> {target}')
-    found = True
-
-if not found:
-    print('Nenhum arquivo mcp-report*.json encontrado em all-artifacts.')
-PY
+          python3 tcc-tests/scripts/gather_mcp_reports.py \
+            --source all-artifacts \
+            --dest report-inputs
 
       - name: Download previous history (if any)
         env:
