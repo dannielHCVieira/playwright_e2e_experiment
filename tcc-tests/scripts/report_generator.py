@@ -11,10 +11,122 @@ Example:
 
 import argparse
 import json
-import os
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
+
+MAX_HISTORY_RUNS = 50
+
+
+def load_history(path: Optional[Path]) -> dict[str, Any]:
+    """Load run history from JSON file, returning empty structure if missing."""
+    if not path:
+        return {"runs": []}
+    if path.exists():
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                if isinstance(data, dict) and "runs" in data:
+                    return data
+        except json.JSONDecodeError:
+            print(f"Warning: Could not parse history file {path}. Starting fresh.")
+    return {"runs": []}
+
+
+def save_history(path: Path, history: dict[str, Any]) -> None:
+    """Persist history dictionary to disk."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(history, f, ensure_ascii=False, indent=2)
+
+
+def infer_project_name(source_file: str) -> str:
+    """Infer project name from report file naming convention."""
+    if "__" in source_file:
+        slug, _ = source_file.split("__", 1)
+        if slug.startswith("mcp-") and slug.endswith("-artifacts"):
+            return slug[len("mcp-"):-len("-artifacts")]
+        return slug
+    return source_file.replace(".json", "")
+
+
+def update_history_runs(history: dict[str, Any], run_entry: dict[str, Any]) -> dict[str, Any]:
+    """Insert or replace the current run entry into the history list."""
+    runs = [run for run in history.get("runs", []) if run.get("run_id") != run_entry.get("run_id")]
+    runs.append(run_entry)
+    runs.sort(key=lambda r: r.get("timestamp", ""))
+    if len(runs) > MAX_HISTORY_RUNS:
+        runs = runs[-MAX_HISTORY_RUNS:]
+    history["runs"] = runs
+    return history
+
+
+def build_run_entry(stats: dict[str, Any], metadata: dict[str, Any]) -> dict[str, Any]:
+    """Create a run summary entry suitable for history tracking."""
+    projects: dict[str, dict[str, Any]] = {}
+    for report_summary in stats.get("per_report_summary", []):
+        project = infer_project_name(report_summary.get("source_file", ""))
+        entry = projects.setdefault(
+            project,
+            {
+                "project": project,
+                "total_tests": 0,
+                "passed_tests": 0,
+                "failed_tests": 0,
+                "duration_seconds": 0.0,
+                "total_cost_usd": 0.0,
+                "total_tokens": 0,
+                "input_tokens": 0,
+                "output_tokens": 0,
+            },
+        )
+        entry["total_tests"] += report_summary.get("total", 0)
+        entry["passed_tests"] += report_summary.get("passed", 0)
+        entry["failed_tests"] += report_summary.get("failed", 0)
+        entry["duration_seconds"] += report_summary.get("duration_seconds", 0)
+        entry["total_cost_usd"] += report_summary.get("cost_usd", 0)
+        entry["total_tokens"] += report_summary.get("total_tokens", 0)
+        entry["input_tokens"] += report_summary.get("input_tokens", 0)
+        entry["output_tokens"] += report_summary.get("output_tokens", 0)
+
+    run_entry = {
+        "run_id": metadata.get("run_id"),
+        "run_number": metadata.get("run_number"),
+        "workflow": metadata.get("workflow"),
+        "timestamp": metadata.get("timestamp") or datetime.now(timezone.utc).isoformat(),
+        "provider": metadata.get("provider"),
+        "model": metadata.get("model"),
+        "commit_sha": metadata.get("commit_sha"),
+        "trigger": metadata.get("trigger"),
+        "actor": metadata.get("actor"),
+        "total_tests": stats.get("total_tests", 0),
+        "passed_tests": stats.get("passed_tests", 0),
+        "failed_tests": stats.get("failed_tests", 0),
+        "pass_rate": stats.get("pass_rate", 0),
+        "total_cost_usd": stats.get("total_cost_usd", 0),
+        "total_tokens": stats.get("total_tokens", 0),
+        "total_input_tokens": stats.get("total_input_tokens", 0),
+        "total_output_tokens": stats.get("total_output_tokens", 0),
+        "total_duration_seconds": stats.get("total_duration_seconds", 0),
+        "projects": list(projects.values()),
+    }
+    return run_entry
+
+
+def format_run_label(run: dict[str, Any]) -> str:
+    """Build a friendly label for a run/chart."""
+    ts = run.get("timestamp")
+    run_number = run.get("run_number")
+    label_date = ts or "N/A"
+    if ts:
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            label_date = dt.strftime("%d/%m %H:%M")
+        except ValueError:
+            pass
+    if run_number is not None:
+        return f"#{run_number} - {label_date}"
+    return label_date
 
 
 def load_json_files(folder_path: str) -> list[dict]:
@@ -58,6 +170,7 @@ def analyze_reports(reports: list[dict]) -> dict[str, Any]:
         "duration_by_model": {},
         "detailed_results": [],
         "errors": [],
+        "per_report_summary": [],
     }
     
     for report in reports:
@@ -146,6 +259,21 @@ def analyze_reports(reports: list[dict]) -> dict[str, Any]:
                     "error": error,
                     "file": report.get("_source_file", ""),
                 })
+
+        stats["per_report_summary"].append({
+            "source_file": report.get("_source_file", ""),
+            "model": model,
+            "provider": provider,
+            "total": total,
+            "passed": passed,
+            "failed": failed,
+            "duration_seconds": duration,
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "cost_usd": cost_usd,
+            "generated_at": generated_at,
+        })
     
     # Calculate averages
     if stats["total_tests"] > 0:
@@ -209,6 +337,79 @@ def generate_html_report(stats: dict[str, Any], output_path: str) -> None:
     
     avg_duration_labels = json.dumps(list(stats["avg_duration_by_model"].keys()))
     avg_duration_values = json.dumps([round(v, 2) for v in stats["avg_duration_by_model"].values()])
+
+    history_runs = stats.get("history_runs", []) or []
+    history_labels = "[]"
+    history_pass_rates = "[]"
+    history_costs = "[]"
+    history_tests = "[]"
+    history_tokens = "[]"
+    history_rows = ""
+    history_section_html = ""
+    if history_runs:
+        history_runs_sorted = sorted(history_runs, key=lambda r: r.get("timestamp", ""))
+        history_labels = json.dumps([format_run_label(run) for run in history_runs_sorted])
+        history_pass_rates = json.dumps([round(run.get("pass_rate", 0), 2) for run in history_runs_sorted])
+        history_costs = json.dumps([round(run.get("total_cost_usd", 0), 4) for run in history_runs_sorted])
+        history_tests = json.dumps([run.get("total_tests", 0) for run in history_runs_sorted])
+        history_tokens = json.dumps([round(run.get("total_tokens", 0) / 1000, 2) for run in history_runs_sorted])
+
+        latest_runs = list(reversed(history_runs_sorted))[:10]
+        for run in latest_runs:
+            projects = run.get("projects", [])
+            failing_projects = sum(1 for project in projects if project.get("failed_tests", 0) > 0)
+            status_badge = "passed" if run.get("failed_tests", 0) == 0 else "failed"
+            status_icon = "✓" if status_badge == "passed" else "✗"
+            history_rows += f"""
+            <tr class="{status_badge}">
+                <td><span class="status-badge {status_badge}">{status_icon}</span></td>
+                <td class="run-label">{format_run_label(run)}</td>
+                <td>{run.get('provider', 'unknown')} · {run.get('model', 'unknown')}</td>
+                <td>{run.get('passed_tests', 0)}/{run.get('total_tests', 0)}</td>
+                <td>${run.get('total_cost_usd', 0):.4f}</td>
+                <td>{format_number(run.get('total_tokens', 0))}</td>
+                <td>{failing_projects} proj. falhando</td>
+            </tr>
+            """
+
+        history_section_html = f"""
+        <section class="card history-section">
+            <h2>🕒 Histórico de Execuções</h2>
+            <p class="history-subtitle">Acompanhe a evolução run a run (máx. {MAX_HISTORY_RUNS} execuções recentes).</p>
+            <div class="history-grid">
+                <div class="history-chart">
+                    <h3>Taxa de Sucesso por Execução</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="historyPassRateChart"></canvas>
+                    </div>
+                </div>
+                <div class="history-chart">
+                    <h3>Custo e Volume de Tokens por Execução</h3>
+                    <div class="chart-wrapper">
+                        <canvas id="historyCostChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="history-table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Status</th>
+                            <th>Execução</th>
+                            <th>Provider/Modelo</th>
+                            <th>Passados/Total</th>
+                            <th>Custo</th>
+                            <th>Tokens</th>
+                            <th>Projetos</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {history_rows}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        """
     
     # Generate detailed results table rows
     results_rows = ""
@@ -588,6 +789,42 @@ def generate_html_report(stats: dict[str, Any], output_path: str) -> None:
             font-family: 'JetBrains Mono', monospace;
         }}
         
+        /* History Section */
+        .history-section {{
+            border-left: 4px solid var(--accent-blue);
+        }}
+        
+        .history-subtitle {{
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }}
+        
+        .history-grid {{
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }}
+        
+        .history-chart h3 {{
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.75rem;
+        }}
+        
+        .history-table-wrapper {{
+            overflow-x: auto;
+        }}
+        
+        .history-table-wrapper table {{
+            min-width: 600px;
+        }}
+        
+        .run-label {{
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }}
+        
         /* Cost Simulator Styles */
         .simulator-section {{
             border-left: 4px solid var(--accent-purple);
@@ -828,6 +1065,8 @@ def generate_html_report(stats: dict[str, Any], output_path: str) -> None:
                 <div class="subvalue">~{format_number(stats['avg_tokens_per_test'])} por teste</div>
             </div>
         </div>
+        
+        {history_section_html}
         
         <!-- Cost Simulator -->
         <section class="card simulator-section">
@@ -1164,6 +1403,125 @@ def generate_html_report(stats: dict[str, Any], output_path: str) -> None:
             }}
         }});
         
+        // History Charts
+        const historyLabels = {history_labels};
+        const historyPassRates = {history_pass_rates};
+        const historyCosts = {history_costs};
+        const historyTests = {history_tests};
+        const historyTokens = {history_tokens};
+
+        if (historyLabels.length > 0) {{
+            new Chart(document.getElementById('historyPassRateChart'), {{
+                data: {{
+                    labels: historyLabels,
+                    datasets: [
+                        {{
+                            type: 'line',
+                            label: 'Taxa de Sucesso (%)',
+                            data: historyPassRates,
+                            borderColor: '#3fb950',
+                            backgroundColor: 'rgba(63, 185, 80, 0.15)',
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y'
+                        }},
+                        {{
+                            type: 'bar',
+                            label: 'Total de Testes',
+                            data: historyTests,
+                            backgroundColor: 'rgba(163, 113, 247, 0.4)',
+                            borderColor: '#a371f7',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        }}
+                    ]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {{
+                        mode: 'index',
+                        intersect: false
+                    }},
+                    scales: {{
+                        y: {{
+                            type: 'linear',
+                            position: 'left',
+                            min: 0,
+                            max: 100,
+                            ticks: {{
+                                callback: (value) => value + '%'
+                            }}
+                        }},
+                        y1: {{
+                            type: 'linear',
+                            position: 'right',
+                            grid: {{
+                                drawOnChartArea: false
+                            }},
+                            beginAtZero: true
+                        }}
+                    }}
+                }}
+            }});
+
+            new Chart(document.getElementById('historyCostChart'), {{
+                data: {{
+                    labels: historyLabels,
+                    datasets: [
+                        {{
+                            type: 'bar',
+                            label: 'Custo (USD)',
+                            data: historyCosts,
+                            backgroundColor: 'rgba(88, 166, 255, 0.6)',
+                            borderColor: '#58a6ff',
+                            borderWidth: 1,
+                            yAxisID: 'y'
+                        }},
+                        {{
+                            type: 'line',
+                            label: 'Tokens (K)',
+                            data: historyTokens,
+                            borderColor: '#d29922',
+                            backgroundColor: 'rgba(210, 153, 34, 0.15)',
+                            tension: 0.3,
+                            fill: true,
+                            yAxisID: 'y1'
+                        }}
+                    ]
+                }},
+                options: {{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {{
+                        mode: 'index',
+                        intersect: false
+                    }},
+                    scales: {{
+                        y: {{
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            ticks: {{
+                                callback: (value) => '$' + value
+                            }}
+                        }},
+                        y1: {{
+                            type: 'linear',
+                            position: 'right',
+                            grid: {{
+                                drawOnChartArea: false
+                            }},
+                            beginAtZero: true,
+                            ticks: {{
+                                callback: (value) => value + 'K'
+                            }}
+                        }}
+                    }}
+                }}
+            }});
+        }}
+        
         // ========================================
         // Cost Simulator
         // ========================================
@@ -1328,6 +1686,17 @@ Exemplos:
         default="report.html",
         help="Nome do arquivo HTML de saída (padrão: report.html)"
     )
+    parser.add_argument("--history-input", help="Caminho para o arquivo JSON de histórico existente")
+    parser.add_argument("--history-output", help="Caminho para salvar o histórico atualizado")
+    parser.add_argument("--history-run-id", help="Identificador único da execução (ex: run_id do GitHub)")
+    parser.add_argument("--history-run-number", type=int, help="Número da execução (ex: run_number do GitHub)")
+    parser.add_argument("--history-workflow", help="Nome do workflow ou pipeline")
+    parser.add_argument("--history-provider", help="Provider do LLM utilizado na execução")
+    parser.add_argument("--history-model", help="Modelo do LLM utilizado na execução")
+    parser.add_argument("--history-sha", help="SHA do commit associado")
+    parser.add_argument("--history-trigger", help="Tipo de disparo (push, workflow_dispatch, etc.)")
+    parser.add_argument("--history-actor", help="Usuário/ator que disparou a run")
+    parser.add_argument("--history-timestamp", help="Timestamp ISO customizado para a run")
     
     args = parser.parse_args()
     
@@ -1350,6 +1719,34 @@ Exemplos:
         print(f"   - Falhados: {stats['failed_tests']}")
         print(f"   - Taxa de sucesso: {stats['pass_rate']:.1f}%")
         print(f"   - Custo total: ${stats['total_cost_usd']:.4f}")
+
+        history_input_path = Path(args.history_input).expanduser().resolve() if args.history_input else None
+        history_output_path = Path(args.history_output).expanduser().resolve() if args.history_output else None
+        if not history_input_path and history_output_path and history_output_path.exists():
+            history_input_path = history_output_path
+        history_data = load_history(history_input_path)
+
+        if history_output_path:
+            if not args.history_run_id:
+                print("⚠️ --history-output fornecido sem --history-run-id; histórico não será atualizado.")
+            else:
+                metadata = {
+                    "run_id": args.history_run_id,
+                    "run_number": args.history_run_number,
+                    "workflow": args.history_workflow,
+                    "timestamp": args.history_timestamp or datetime.now(timezone.utc).isoformat(),
+                    "provider": args.history_provider,
+                    "model": args.history_model,
+                    "commit_sha": args.history_sha,
+                    "trigger": args.history_trigger,
+                    "actor": args.history_actor,
+                }
+                run_entry = build_run_entry(stats, metadata)
+                history_data = update_history_runs(history_data, run_entry)
+                save_history(history_output_path, history_data)
+                print(f"🗂️ Histórico atualizado com a execução {metadata.get('run_id')}.")
+
+        stats["history_runs"] = history_data.get("runs", [])
         
         generate_html_report(stats, args.output)
         
