@@ -40,3 +40,4 @@ playwright.env
 /tcc-tests/reports/
 /tcc-tests/tcc-tests/artifacts/
 /tcc-tests/tests_ipynb/
+scripts/dist/

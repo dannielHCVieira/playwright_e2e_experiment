@@ -33,8 +33,35 @@ class AssertResult(BaseModel):
 
 try:  # Permite execução direta via `python execute_nova_act.py`
     from .config_loader import TestCaseDefinition
+    from .beforeeach_setup import apply_beforeeach_setup, get_script_setup
 except ImportError:  # pragma: no cover
     from config_loader import TestCaseDefinition
+    from beforeeach_setup import apply_beforeeach_setup, get_script_setup
+
+
+def _infer_beforeeach_file(test_name: str) -> Optional[str]:
+    """Infere o arquivo de beforeEach a partir do nome do teste.
+
+    O nome do teste segue o padrão: {spec-file}__{num}-{test-name}
+    Exemplo: show-battery-status__01-show-battery-status -> show-battery-status.spec.js
+
+    Returns:
+        Nome do arquivo spec com extensão, ou None se não conseguir inferir.
+    """
+    if "__" not in test_name:
+        return None
+
+    spec_base = test_name.split("__")[0]
+    if not spec_base:
+        return None
+
+    # Tenta com .spec.js primeiro (mais comum), depois .spec.ts
+    for ext in [".spec.js", ".spec.ts"]:
+        candidate = f"{spec_base}{ext}"
+        if get_script_setup(candidate):
+            return candidate
+
+    return None
 
 LOGGER = logging.getLogger(__name__)
 
@@ -96,6 +123,7 @@ class NovaActExecutor:
         record_video: bool = True,
         ignore_https_errors: bool = False,
         logger: Optional[logging.Logger] = None,
+        beforeeach_test_file: Optional[str] = None,
     ) -> None:
         self.logger = logger or LOGGER
         self.headless = headless
@@ -103,6 +131,7 @@ class NovaActExecutor:
         self.ignore_https_errors = ignore_https_errors
         self.run_root = artifacts_root / suite_label / run_id
         self.run_root.mkdir(parents=True, exist_ok=True)
+        self.beforeeach_test_file = beforeeach_test_file
 
     def execute(self, test_case: TestCaseDefinition) -> NovaActResult:
         prompts = test_case.config.prompt
@@ -132,13 +161,30 @@ class NovaActExecutor:
         assertion_schema = AssertResult.model_json_schema()
 
         try:
+            # Determina o arquivo de beforeEach: usa o fornecido ou infere do nome do teste
+            beforeeach_file = self.beforeeach_test_file or _infer_beforeeach_file(test_case.name)
+
+            # Verifica se há setup de beforeEach para este teste
+            has_beforeeach_setup = bool(beforeeach_file and get_script_setup(beforeeach_file))
+
+            # Se há setup, usa about:blank como página inicial para aplicar scripts antes
+            starting_url = "about:blank" if has_beforeeach_setup else test_case.config.url
+
             with NovaAct(
                 headless=self.headless,
-                starting_page=test_case.config.url,
+                starting_page=starting_url,
                 logs_directory=str(test_dir),
                 record_video=self.record_video,
                 ignore_https_errors=self.ignore_https_errors,
             ) as nova:
+                # Aplica beforeEach setup se necessário (antes da navegação real)
+                if has_beforeeach_setup:
+                    self.logger.info(
+                        "🔧 Aplicando beforeEach setup de %s", beforeeach_file
+                    )
+                    apply_beforeeach_setup(nova.page, beforeeach_file)
+                    self.logger.info("🌐 Navegando para %s", test_case.config.url)
+                    nova.page.goto(test_case.config.url, wait_until="domcontentloaded")
                 # -------------------------------------------------------------
                 # FASE 1: Executa ações (com tratamento especial para double-click)
                 # -------------------------------------------------------------

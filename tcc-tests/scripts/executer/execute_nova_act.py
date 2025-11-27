@@ -98,6 +98,14 @@ def parse_args() -> argparse.Namespace:
             " Também pode ser habilitado definindo NOVA_ACT_IGNORE_HTTPS_ERRORS=1."
         ),
     )
+    parser.add_argument(
+        "--beforeeach-test-file",
+        metavar="FILE",
+        help=(
+            "Nome do arquivo de teste Playwright original para aplicar beforeEach setup. "
+            "Ex: show-battery-status.spec.js. Usado para injetar addInitScript/mocks antes da navegação."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -139,6 +147,7 @@ def main() -> int:
         headless=not args.headful,
         ignore_https_errors=args.ignore_https_errors,
         logger=logging.getLogger("nova_act_runner"),
+        beforeeach_test_file=args.beforeeach_test_file,
     )
 
     results: List[NovaActResult] = []
