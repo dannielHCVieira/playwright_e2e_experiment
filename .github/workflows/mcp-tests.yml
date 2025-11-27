@@ -106,6 +106,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         project:
           - todomvc
@@ -138,9 +139,9 @@ jobs:
           npx tsc -p scripts/tsconfig.json
           node scripts/dist/classifyBeforeEach.js
 
-      - name: Install dependencies
+      - name: Install dependencies (MCP extras)
         working-directory: tcc-tests
-        run: uv sync
+        run: uv sync --extra mcp
 
       - name: Install Playwright browsers
         working-directory: tcc-tests
@@ -173,11 +174,14 @@ jobs:
   # ===========================================================================
   test-local:
     name: MCP Test (${{ matrix.project }}) [local server]
-    needs: convert
+    needs:
+      - convert
+      - test-external
     if: always() && (needs.convert.result == 'success' || needs.convert.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 1
       matrix:
         project:
           - mock-battery
@@ -228,9 +232,9 @@ jobs:
       # -------------------------------------------------------------------------
       # Execução dos testes MCP
       # -------------------------------------------------------------------------
-      - name: Install MCP dependencies
+      - name: Install MCP dependencies (extras)
         working-directory: tcc-tests
-        run: uv sync
+        run: uv sync --extra mcp
 
       - name: Install Playwright browsers
         working-directory: tcc-tests

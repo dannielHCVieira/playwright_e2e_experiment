@@ -35,6 +35,13 @@ except ImportError:
     from config_loader import TestCaseDefinition, load_test_cases
 
 from dotenv import load_dotenv
+from tenacity import (
+    AsyncRetrying,
+    before_sleep_log,
+    retry_if_exception,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 load_dotenv()
 
@@ -172,6 +179,46 @@ class PlaywrightMCPExecutor:
         self.max_steps = max_steps
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
+    @staticmethod
+    def _is_rate_limit_exception(exc: Exception) -> bool:
+        """Detecta erros relacionados a rate limit."""
+        message = str(exc).lower()
+        if "rate limit" in message or "rate_limit" in message:
+            return True
+
+        status = getattr(exc, "status_code", None) or getattr(exc, "http_status", None)
+        if status == 429:
+            return True
+
+        response = getattr(exc, "response", None)
+        response_status = getattr(response, "status_code", None)
+        if response_status == 429:
+            return True
+
+        body = getattr(exc, "body", None)
+        if isinstance(body, dict):
+            error = body.get("error") or {}
+            if error.get("code") == "rate_limit_exceeded":
+                return True
+
+        return False
+
+    async def _run_agent_with_retry(self, agent: MCPAgent, prompt: str):
+        """Executa o agente com retry exponencial em caso de rate limit."""
+        async for attempt in AsyncRetrying(
+            retry=retry_if_exception(self._is_rate_limit_exception),
+            wait=wait_random_exponential(multiplier=2, max=90),
+            stop=stop_after_attempt(6),
+            before_sleep=before_sleep_log(LOGGER, logging.WARNING),
+            reraise=True,
+        ):
+            with attempt:
+                LOGGER.debug(
+                    "Executando MCP agent (tentativa %d)",
+                    attempt.retry_state.attempt_number,
+                )
+                return await agent.run(prompt)
+
     def _create_llm(self):
         """Cria a instância do LLM baseado no provider configurado."""
         if self.llm_provider == "openai":
@@ -221,7 +268,7 @@ class PlaywrightMCPExecutor:
                 from langchain_community.callbacks import get_openai_callback
 
                 with get_openai_callback() as cb:
-                    result = await agent.run(full_prompt)
+                    result = await self._run_agent_with_retry(agent, full_prompt)
                     token_usage = TokenUsage(
                         input_tokens=cb.prompt_tokens,
                         output_tokens=cb.completion_tokens,
@@ -230,7 +277,7 @@ class PlaywrightMCPExecutor:
                     )
             else:
                 # Para Anthropic, usamos estimativa baseada no resultado
-                result = await agent.run(full_prompt)
+                result = await self._run_agent_with_retry(agent, full_prompt)
                 # Estima tokens (aproximação: 4 caracteres = 1 token)
                 input_chars = len(full_prompt)
                 output_chars = len(str(result))

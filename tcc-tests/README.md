@@ -2,6 +2,14 @@
 
 O diretório `scripts/executer` contém um runner que lê os prompts em JSON/YAML (por exemplo, aqueles em `tests/example/**/config`) e executa os testes usando o NovaAct. Ele foi pensado para uso local e também para rodar em paralelo ao pipeline padrão no GitHub Actions.
 
+### Dependências
+
+O `uv sync` padrão instala somente o que o NovaAct precisa (sem LangChain).
+
+- Para executar os runners NovaAct: `uv sync`
+- Para usar o conversor code2NL localmente: `uv sync --extra converter`
+- Para rodar o executor MCP localmente: `uv sync --extra mcp`
+
 ### Como executar
 
 ```
