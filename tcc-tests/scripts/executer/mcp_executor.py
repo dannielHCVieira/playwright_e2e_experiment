@@ -18,7 +18,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 # mcp-use: biblioteca que conecta LLMs a servidores MCP
 # pip install mcp-use langchain-openai langchain-anthropic
@@ -33,6 +33,11 @@ try:
     from .config_loader import TestCaseDefinition, load_test_cases
 except ImportError:
     from config_loader import TestCaseDefinition, load_test_cases
+
+try:
+    from .beforeeach_setup import get_init_script_bodies, infer_beforeeach_file
+except ImportError:
+    from beforeeach_setup import get_init_script_bodies, infer_beforeeach_file
 
 from dotenv import load_dotenv
 from tenacity import (
@@ -51,19 +56,31 @@ LOGGER = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Configuração do MCP Server
 # ---------------------------------------------------------------------------
-def get_mcp_config(screenshots_dir: Path) -> dict:
-    """Retorna configuração do MCP com diretório de screenshots e modo isolado."""
+def get_mcp_config(
+    screenshots_dir: Path,
+    headless: bool = True,
+    init_scripts: Optional[Sequence[Path]] = None,
+) -> dict:
+    """Retorna configuração do MCP com diretório de screenshots e init scripts opcionais."""
+    args = [
+        "@playwright/mcp@latest",
+        "--isolated",  # Cada sessão é independente (sem persistir cookies/localStorage)
+        "--output-dir",
+        str(screenshots_dir.absolute()),
+    ]
+    if headless:
+        args.insert(1, "--headless")  # Insere após o pacote npm
+
+    if init_scripts:
+        for script_path in init_scripts:
+            resolved = Path(script_path).resolve()
+            args.append(f"--init-script={resolved}")
+
     return {
         "mcpServers": {
             "playwright": {
                 "command": "npx",
-                "args": [
-                    "@playwright/mcp@latest",
-                    "--headless",
-                    "--isolated",  # Cada sessão é independente (sem persistir cookies/localStorage)
-                    "--output-dir",
-                    str(screenshots_dir.absolute()),
-                ],
+                "args": args,
             }
         }
     }
@@ -172,11 +189,13 @@ class PlaywrightMCPExecutor:
         llm_model: str = "gpt-5-mini",
         artifacts_dir: Path = Path("artifacts/mcp-tests"),
         max_steps: int = 30,
+        headless: bool = True,
     ):
         self.llm_provider = llm_provider
         self.llm_model = llm_model
         self.artifacts_dir = artifacts_dir
         self.max_steps = max_steps
+        self.headless = headless
         self.artifacts_dir.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
@@ -232,6 +251,36 @@ class PlaywrightMCPExecutor:
         else:
             raise ValueError(f"LLM provider não suportado: {self.llm_provider}")
 
+    def _prepare_beforeeach_init_scripts(
+        self, test_case: TestCaseDefinition, test_slug: str, base_dir: Path
+    ) -> List[Path]:
+        """Gera arquivos temporários com init scripts de beforeEach para o MCP."""
+        spec_file = infer_beforeeach_file(test_case.name)
+        if not spec_file:
+            return []
+
+        init_bodies = get_init_script_bodies(spec_file)
+        if not init_bodies:
+            return []
+
+        scripts_dir = base_dir / "beforeeach"
+        scripts_dir.mkdir(parents=True, exist_ok=True)
+
+        script_paths: List[Path] = []
+        for idx, body in enumerate(init_bodies, start=1):
+            script_path = scripts_dir / f"{test_slug}_init_{idx}.js"
+            wrapped = f"(() => {{\n{body}\n}})();\n"
+            script_path.write_text(wrapped, encoding="utf-8")
+            script_paths.append(script_path.resolve())
+
+        LOGGER.info(
+            "🔧 beforeEach setup detectado para %s (%d init script%s)",
+            spec_file,
+            len(script_paths),
+            "s" if len(script_paths) > 1 else "",
+        )
+        return script_paths
+
     async def execute_test(self, test_case: TestCaseDefinition) -> MCPTestResult:
         """Executa um único teste usando MCP."""
         LOGGER.info("🚀 Iniciando teste: %s", test_case.name)
@@ -246,11 +295,18 @@ class PlaywrightMCPExecutor:
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
         screenshots_dir = self.artifacts_dir / f"{test_slug}_{timestamp}"
         screenshots_dir.mkdir(parents=True, exist_ok=True)
+        init_script_paths = self._prepare_beforeeach_init_scripts(
+            test_case, test_slug, screenshots_dir
+        )
 
         client = None
         try:
-            # Cria cliente MCP com diretório de screenshots
-            mcp_config = get_mcp_config(screenshots_dir)
+            # Cria cliente MCP com diretório de screenshots e init scripts opcionais
+            mcp_config = get_mcp_config(
+                screenshots_dir,
+                headless=self.headless,
+                init_scripts=init_script_paths,
+            )
             client = MCPClient.from_dict(mcp_config)
 
             # Cria LLM
@@ -444,6 +500,11 @@ async def main():
         action="store_true",
         help="Lista testes sem executar",
     )
+    parser.add_argument(
+        "--headed",
+        action="store_true",
+        help="Roda o navegador em modo visível (não-headless)",
+    )
 
     args = parser.parse_args()
 
@@ -478,6 +539,7 @@ async def main():
     executor = PlaywrightMCPExecutor(
         llm_provider=args.llm_provider,
         llm_model=args.llm_model,
+        headless=not args.headed,
     )
     results = await executor.execute_suite(test_cases)
 

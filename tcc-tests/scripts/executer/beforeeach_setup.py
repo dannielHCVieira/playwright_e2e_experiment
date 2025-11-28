@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import logging
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Optional, Sequence
 
 LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,39 @@ def get_script_setup(test_file: str) -> Optional[str]:
     return None
 
 
-def apply_beforeeach_setup(page: Any, test_file: str) -> bool:
+def infer_beforeeach_file(test_name: str) -> Optional[str]:
+    """Infere o arquivo original do Playwright a partir do nome do teste.
+
+    O nome segue o padrão `{spec-base}__{num}-{test-name}`.
+    """
+    if "__" not in test_name:
+        return None
+
+    spec_base = test_name.split("__")[0]
+    if not spec_base:
+        return None
+
+    for ext in (".spec.js", ".spec.ts"):
+        candidate = f"{spec_base}{ext}"
+        if get_script_setup(candidate):
+            return candidate
+    return None
+
+
+def get_init_script_bodies(test_file: str) -> list[str]:
+    """Retorna os corpos das funções passadas para addInitScript em um teste."""
+    snippet = get_script_setup(test_file)
+    if not snippet:
+        return []
+    bodies = _extract_init_script_bodies(snippet)
+    if not bodies:
+        LOGGER.debug("ℹ️ Nenhum addInitScript encontrado para %s", test_file)
+    return bodies
+
+
+def apply_beforeeach_setup(
+    page: Any, test_file: str, init_script_bodies: Optional[Sequence[str]] = None
+) -> bool:
     """Aplica o setup de beforeEach na página do Playwright.
 
     IMPORTANTE: Deve ser chamado ANTES da navegação para a URL do teste,
@@ -90,8 +122,12 @@ def apply_beforeeach_setup(page: Any, test_file: str) -> bool:
     Returns:
         True se um setup foi aplicado, False caso contrário.
     """
-    snippet = get_script_setup(test_file)
-    if not snippet:
+    bodies = (
+        list(init_script_bodies)
+        if init_script_bodies is not None
+        else get_init_script_bodies(test_file)
+    )
+    if not bodies:
         return False
 
     LOGGER.info("🔧 Aplicando beforeEach setup para %s", test_file)
@@ -106,8 +142,7 @@ def apply_beforeeach_setup(page: Any, test_file: str) -> bool:
     # do addInitScript e aplicá-lo
 
     try:
-        # Tenta aplicar usando addInitScript
-        _apply_init_scripts(page, snippet)
+        _apply_init_scripts(page, bodies)
         LOGGER.info("✅ Setup aplicado com sucesso")
         return True
     except Exception as e:
@@ -115,21 +150,8 @@ def apply_beforeeach_setup(page: Any, test_file: str) -> bool:
         return False
 
 
-def _apply_init_scripts(page: Any, snippet: str) -> None:
-    """Aplica os scripts de inicialização extraídos do snippet.
-
-    Esta função processa o snippet e aplica os addInitScript encontrados.
-    O snippet vem no formato JavaScript Playwright:
-        await page.addInitScript(() => { ...body... });
-
-    Precisamos extrair o body e passá-lo para page.add_init_script() do Python.
-    """
-    import re
-
-    # Padrão para encontrar addInitScript(() => { ... })
-    # Usa um approach mais robusto para capturar blocos com chaves aninhadas
-    init_scripts = _extract_init_script_bodies(snippet)
-
+def _apply_init_scripts(page: Any, init_scripts: Sequence[str]) -> None:
+    """Aplica os scripts de inicialização extraídos do arquivo de classificação."""
     if not init_scripts:
         LOGGER.warning("⚠️ Nenhum addInitScript encontrado no snippet")
         return
