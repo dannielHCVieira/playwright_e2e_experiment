@@ -29,16 +29,30 @@ jobs:
   # ===========================================================================
   convert:
     name: Convert code to configs
-    if: ${{ github.event.inputs.skip_convert != 'true' }}
     runs-on: ubuntu-latest
+    outputs:
+      configs_available: ${{ steps.configs-available.outputs.configs_available }}
     steps:
+      - name: Determine convert mode
+        id: convert-mode
+        run: |
+          if [ "${{ github.event.inputs.skip_convert }}" = "true" ]; then
+            echo "should_convert=false" >> "$GITHUB_OUTPUT"
+            echo "🚫 Convert job skipado: usando configs existentes."
+          else
+            echo "should_convert=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Convert job habilitado: gerando configs novas."
+          fi
+
       - uses: actions/checkout@v5
 
       - uses: actions/setup-node@v5
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         with:
           node-version: 20
 
       - uses: astral-sh/setup-uv@v3
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         with:
           enable-cache: true
 
@@ -46,6 +60,7 @@ jobs:
       # STEP 1.1: Conversão code2NL (venv com langchain)
       # -------------------------------------------------------------------------
       - name: Create langchain venv
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         working-directory: tcc-tests
         run: |
           uv venv .venv-langchain
@@ -53,6 +68,7 @@ jobs:
           uv pip install langchain-openai python-dotenv pydantic
 
       - name: Convert code to natural language
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         working-directory: tcc-tests
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
@@ -73,6 +89,7 @@ jobs:
       # STEP 1.2: Geração de configs YAML/JSON (venv limpo, sem langchain)
       # -------------------------------------------------------------------------
       - name: Create clean venv for config generation
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         working-directory: tcc-tests
         run: |
           uv venv .venv-config
@@ -80,6 +97,7 @@ jobs:
           uv pip install pyyaml pydantic
 
       - name: Generate YAML/JSON configs
+        if: ${{ steps.convert-mode.outputs.should_convert == 'true' }}
         working-directory: tcc-tests
         run: |
           source .venv-config/bin/activate
@@ -93,7 +111,19 @@ jobs:
             python -m scripts.converter.generate_config $project || echo "⚠️ Falha em $project, continuando..."
           done
 
-      - name: Upload generated configs
+      - name: Check configs availability
+        id: configs-available
+        run: |
+          if compgen -G "tcc-tests/tests/example/*/config/*" > /dev/null; then
+            echo "configs_available=true" >> "$GITHUB_OUTPUT"
+            echo "📦 Configs disponíveis para os testes."
+          else
+            echo "configs_available=false" >> "$GITHUB_OUTPUT"
+            echo "⚠️ Nenhuma config encontrada em tcc-tests/tests/example/*/config."
+          fi
+
+      - name: Upload configs snapshot
+        if: ${{ steps.configs-available.outputs.configs_available == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: mcp-configs
@@ -127,7 +157,7 @@ jobs:
 
       # Download configs gerados (se o job convert rodou)
       - name: Download generated configs
-        if: needs.convert.result == 'success'
+        if: needs.convert.outputs.configs_available == 'true'
         uses: actions/download-artifact@v4
         with:
           name: mcp-configs
@@ -199,7 +229,7 @@ jobs:
 
       # Download configs gerados (se o job convert rodou)
       - name: Download generated configs
-        if: needs.convert.result == 'success'
+        if: needs.convert.outputs.configs_available == 'true'
         uses: actions/download-artifact@v4
         with:
           name: mcp-configs
