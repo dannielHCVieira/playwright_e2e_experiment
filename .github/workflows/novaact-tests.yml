@@ -295,6 +295,9 @@ jobs:
     if: always()
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
@@ -361,3 +364,77 @@ jobs:
           
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "📁 Artifacts uploaded for each project" >> $GITHUB_STEP_SUMMARY
+
+      - name: Collect NovaAct JSON reports
+        run: |
+          python3 tcc-tests/scripts/gather_mcp_reports.py \
+            --source all-artifacts \
+            --dest report-inputs \
+            --pattern "*.json"
+
+      - name: Download previous history (if any)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          mkdir -p history
+          echo "🔎 Buscando artifact de histórico anterior..."
+          download_url=$(gh api repos/$REPO/actions/artifacts --paginate -q '.artifacts[] | select(.name=="novaact-tests-history" and .expired==false) | .archive_download_url' | head -n 1 || true)
+          if [ -n "$download_url" ]; then
+            echo "⬇️  Histórico encontrado, baixando..."
+            curl -sSL -H "Authorization: Bearer $GH_TOKEN" -o history/history.zip "$download_url"
+            unzip -o history/history.zip -d history >/dev/null
+            rm history/history.zip
+          else
+            echo "ℹ️ Nenhum histórico anterior disponível."
+          fi
+          if [ ! -f history/history.json ]; then
+            echo '{"runs":[]}' > history/history.json
+          fi
+
+      - name: Generate HTML report
+        id: html_report
+        run: |
+          if compgen -G "report-inputs/*.json" > /dev/null; then
+            python3 tcc-tests/scripts/report_generator.py report-inputs \
+              --output novaact-tests-report.html \
+              --history-input history/history.json \
+              --history-output history/history.json \
+              --history-run-id "${{ github.run_id }}" \
+              --history-run-number "${{ github.run_number }}" \
+              --history-workflow "${{ github.workflow }}" \
+              --history-provider "novaact" \
+              --history-model "novaact-runner" \
+              --history-sha "${{ github.sha }}" \
+              --history-trigger "${{ github.event_name }}" \
+              --history-actor "${{ github.actor }}" \
+              --history-timestamp "$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            echo "generated=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Nenhum arquivo JSON encontrado para gerar o relatório HTML."
+            echo "generated=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload HTML report
+        if: steps.html_report.outputs.generated == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaact-tests-html-report
+          path: novaact-tests-report.html
+
+      - name: Upload updated history
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: novaact-tests-history
+          path: history/history.json
+          if-no-files-found: warn
+
+      - name: Referenciar relatório HTML no summary
+        if: steps.html_report.outputs.generated == 'true'
+        run: |
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📄 Relatório HTML completo anexado como artifact **novaact-tests-html-report**." >> $GITHUB_STEP_SUMMARY
+          echo "🕒 Histórico de execuções salvo em **novaact-tests-history**." >> $GITHUB_STEP_SUMMARY

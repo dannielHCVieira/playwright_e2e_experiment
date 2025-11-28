@@ -13,12 +13,12 @@ from pathlib import Path
 def slug_from_path(path: Path) -> str:
     """Extract the artifact slug from the path (e.g., mcp-todomvc-artifacts)."""
     for part in path.parts:
-        if part.startswith("mcp-") and part.endswith("-artifacts"):
+        if part.endswith("-artifacts"):
             return part
     return "report"
 
 
-def collect_reports(source_dir: Path, dest_dir: Path) -> None:
+def collect_reports(source_dir: Path, dest_dir: Path, pattern: str) -> None:
     if dest_dir.exists():
         shutil.rmtree(dest_dir)
     dest_dir.mkdir(parents=True, exist_ok=True)
@@ -28,7 +28,7 @@ def collect_reports(source_dir: Path, dest_dir: Path) -> None:
         return
 
     found = False
-    for json_file in source_dir.rglob("mcp-report*.json"):
+    for json_file in source_dir.rglob(pattern):
         if "reports" not in json_file.parts:
             continue
         slug = slug_from_path(json_file)
@@ -38,16 +38,21 @@ def collect_reports(source_dir: Path, dest_dir: Path) -> None:
         found = True
 
     if not found:
-        print("Nenhum arquivo mcp-report*.json encontrado em all-artifacts.")
+        print(f"Nenhum arquivo {pattern} encontrado em all-artifacts.")
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Collect MCP JSON reports from artifacts.")
     parser.add_argument("--source", required=True, help="Path to the root folder containing artifacts.")
     parser.add_argument("--dest", required=True, help="Path to the folder where JSON files will be copied.")
+    parser.add_argument(
+        "--pattern",
+        default="mcp-report*.json",
+        help="Glob pattern to match report files (default: mcp-report*.json).",
+    )
     args = parser.parse_args()
 
-    collect_reports(Path(args.source), Path(args.dest))
+    collect_reports(Path(args.source), Path(args.dest), args.pattern)
     return 0
 
 
