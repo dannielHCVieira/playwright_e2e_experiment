@@ -110,7 +110,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         project:
           - todomvc
@@ -178,14 +177,11 @@ jobs:
   # ===========================================================================
   test-local:
     name: MCP Test (${{ matrix.project }}) [local server]
-    needs:
-      - convert
-      - test-external
+    needs: convert
     if: always() && (needs.convert.result == 'success' || needs.convert.result == 'skipped')
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 1
       matrix:
         project:
           - mock-battery
